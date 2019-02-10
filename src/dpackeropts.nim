@@ -1,3 +1,11 @@
+proc hasArg*(args:var seq[string], a:string) : bool =
+  for i in 0..<args.len:
+    if args[i]==a:
+      args.delete(i)
+      return true
+  false
+
+
 let ArgDef* = """
 Execute packager for every platform
 

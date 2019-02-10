@@ -1,4 +1,4 @@
-import utils/seqs, docopt, actions
+import actions, dpackeropts
 
 type
   Face* = ref object of RootObj
@@ -11,12 +11,10 @@ type
   Zypper = ref object of Face
 
 template `=>`(name: string, face:untyped) =
-  let arg = "--" & name & "-face"
-  if opts[arg]:
-    argv.delete(arg)
+  if argv.hasArg("--" & name & "-face"):
     return face()
 
-proc findFace*(argv: var seq[string], opts: Table[string, Value]) : Face =
+proc face*(argv: var seq[string]) : Face =
   "apt"=>Apt
   "brew"=>Brew
   "choco"=>Choco
@@ -24,11 +22,27 @@ proc findFace*(argv: var seq[string], opts: Table[string, Value]) : Face =
   "emerge"=>Emerge
   "pacman"=>Pacman
   "zypper"=>Zypper
-  Face()
-
-method findAction*(f:Face, argv: var seq[string], opts: Table[string, Value]) : Action {.base.} =
   quit "No face defined"
 
-method findAction(f:Apt, argv: var seq[string], opts: Table[string, Value]) : Action =
-  quit "This is apt"
+method action*(argv: var seq[string], f:Face) : Action {.base.} = INFO
 
+method action(argv: var seq[string], f:Apt) : Action =
+  INFO
+
+method action(argv: var seq[string], f:Brew) : Action =
+  INFO
+
+method action(argv: var seq[string], f:Choco) : Action =
+  INFO
+
+method action(argv: var seq[string], f:DNF) : Action =
+  INFO
+
+method action(argv: var seq[string], f:Emerge) : Action =
+  INFO
+
+method action(argv: var seq[string], f:Pacman) : Action =
+  INFO
+
+method action(argv: var seq[string], f:Zypper) : Action =
+  INFO
