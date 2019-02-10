@@ -7,17 +7,9 @@ let opts = docopt(ArgDef, argv = args, version = "DPacker 0.1.0")
 let face = args.findFace(opts)
 let target = args.findTarget(opts)
 
-for i in args:
-  echo i
+let action = face.findAction(args,opts)
 
-
-
-
-
-
-
-echo face
-echo target
+echo action
 
 #if args2["new"]: 
 #  for name in @(args["<name>"]): 

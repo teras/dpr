@@ -1,21 +1,34 @@
-import utils/seqs, docopt
+import utils/seqs, docopt, actions
 
 type
-  Face* = enum APT, BREW, CHOCO, DNF, EMERGE, PACMAN, ZYPPER, UNKNOWN
+  Face* = ref object of RootObj
+  Apt = ref object of Face
+  Brew = ref object of Face
+  Choco = ref object of Face
+  DNF = ref object of Face
+  Emerge = ref object of Face
+  Pacman = ref object of Face
+  Zypper = ref object of Face
 
-template `=>`(name: string, face:Face) =
+template `=>`(name: string, face:untyped) =
   let arg = "--" & name & "-face"
   if opts[arg]:
     argv.delete(arg)
-    return face
+    return face()
 
 proc findFace*(argv: var seq[string], opts: Table[string, Value]) : Face =
-  "apt"=>APT
-  "brew"=>BREW
-  "choco"=>CHOCO
+  "apt"=>Apt
+  "brew"=>Brew
+  "choco"=>Choco
   "dnf"=>DNF
-  "emerge"=>EMERGE
-  "pacman"=>PACMAN
-  "zypper"=>ZYPPER
-  UNKNOWN
+  "emerge"=>Emerge
+  "pacman"=>Pacman
+  "zypper"=>Zypper
+  Face()
+
+method findAction*(f:Face, argv: var seq[string], opts: Table[string, Value]) : Action {.base.} =
+  quit "No face defined"
+
+method findAction(f:Apt, argv: var seq[string], opts: Table[string, Value]) : Action =
+  quit "This is apt"
 
