@@ -24,5 +24,5 @@ proc target*(argv: var seq[string]) : Target =
   "packer"=>Packer
   "pacman"=>Pacman
   "yaourt"=>Yaourt
-  quit "No target defined"
+  quit targetArgHelp
 

@@ -1,20 +1,11 @@
-proc hasArg*(args:var seq[string], a:string) : bool =
+proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
   for i in 0..<args.len:
     if args[i]==a:
       args.delete(i)
       return true
   false
 
-
-let ArgDef* = """
-Execute packager for every platform
-
-Usage:
-  dpacker [--apt-face|--brew-face|--choco-face|--dnf-face|--emerge-face|--pacman-face|--zypper-face] [--apt|--aurman|--brew|--choco|--dnf|--packer|--pacman|--yaourt] [-n] [OPTIONS...]
-  dpacker --help
-  dpacker --version
-
-Options:
+const faceArgHelp* =  """Please select one of the desired faces:
   --apt-face
   --brew-face
   --choco-face
@@ -22,7 +13,9 @@ Options:
   --emerge-face
   --pacman-face
   --zypper-face
+  """
 
+const targetArgHelp* = """Please select one of the desired targets:
   --apt
   --aurman
   --brew
@@ -31,6 +24,4 @@ Options:
   --packer
   --pacman
   --yaourt
-
-  --more
 """

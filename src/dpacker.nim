@@ -1,21 +1,14 @@
 import os,strutils
-import dpackeropts, faces, targets
+import dpackeropts, faces, targets, actions
 
 var args = commandLineParams()
 
-let action = args.action args.face
+let face = args.face
 let target = args.target
+let action = args.action face
 
-echo action
-
-proc dok(a = "hello"): int =
-    a.len
-
-var s = @["a", "b", "c"]
-
-s.del(s.find("b"))
-echo dok()
-echo dok("hey!")
+if action == INVALID:
+    quit "Invalid command"
 
 #if args2["new"]: 
 #  for name in @(args["<name>"]): 
