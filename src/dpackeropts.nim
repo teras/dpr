@@ -12,8 +12,7 @@ const faceArgHelp* =  """Please select one of the desired faces:
   --dnf-face
   --emerge-face
   --pacman-face
-  --zypper-face
-  """
+  --zypper-face"""
 
 const targetArgHelp* = """Please select one of the desired targets:
   --apt
@@ -23,5 +22,4 @@ const targetArgHelp* = """Please select one of the desired targets:
   --dnf
   --packer
   --pacman
-  --yaourt
-"""
+  --yaourt"""
