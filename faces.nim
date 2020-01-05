@@ -53,13 +53,13 @@ template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
     return if argv.len == 0 : empty  else : nonEmpty
 
 proc face*(argv: var seq[string], strict = false) : Face =
-  "apt"=>Apt
-  "brew"=>Brew
-  "choco"=>Choco
-  "dnf"=>DNF
-  "emerge"=>Emerge
-  "pacman"=>Pacman
-  "zypper"=>Zypper
+  "apt" => Apt
+  "brew" => Brew
+  "choco" => Choco
+  "dnf" => DNF
+  "emerge" => Emerge
+  "pacman" => Pacman
+  "zypper" => Zypper
   if strict: quit faceArgHelp
   nil
 
