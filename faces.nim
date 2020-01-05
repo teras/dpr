@@ -1,4 +1,4 @@
-import actions, dpackeropts
+import actions, dpackeropts, os, parsecfg, streams, strutils
 
 type
   Face* = ref object of RootObj
@@ -10,8 +10,37 @@ type
   Pacman = ref object of Face
   Zypper = ref object of Face
 
+let CONFIG_DIR =
+  when system.hostOS == "macosx":
+    getHomeDir() & "Library/Preferences"
+  else:
+    getConfigDir()
+let CONFIG_FILE = CONFIG_DIR & DirSep & "dpacker.conf"
+const FACE_NAME = "FACE_NAME"
+
+proc saveSelectedFace(faceName:string) =
+  CONFIG_DIR.createDir()
+  var c = newConfig()
+  c.setSectionKey("", FACE_NAME, faceName)
+  c.writeConfig(CONFIG_FILE)
+
+proc loadSavedFace(): Face =
+  if CONFIG_FILE.fileExists():
+    let filestream = newFileStream(open(CONFIG_FILE, fmRead))
+    defer: filestream.close()
+    case filestream.loadConfig(CONFIG_FILE).getSectionValue("", FACE_NAME):
+      of "Apt": return Apt()
+      of "Brew": return Brew()
+      of "Choco": return Choco()
+      of "DNF": return DNF()
+      of "Emerge": return Emerge()
+      of "Pacman": return Pacman()
+      of "Zypper": return Zypper()
+  return nil
+
 template `=>`(name: string, face:untyped) =
-  if argv.hasArg("--" & name & "-face"):
+  if argv.hasArg("--" & name.toLowerAscii & "-face"):
+    saveSelectedFace(name)
     return face()
 
 proc toAction(args: var seq[string], m: seq[seq[string]]) : bool =
@@ -52,16 +81,17 @@ template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
   if argv.toAction(m.convs) :
     return if argv.len == 0 : empty  else : nonEmpty
 
-proc face*(argv: var seq[string], strict = false) : Face =
-  "apt" => Apt
-  "brew" => Brew
-  "choco" => Choco
-  "dnf" => DNF
-  "emerge" => Emerge
-  "pacman" => Pacman
-  "zypper" => Zypper
-  if strict: quit faceArgHelp
-  nil
+proc face*(argv: var seq[string]) : Face =
+  "Apt" => Apt
+  "Brew" => Brew
+  "Choco" => Choco
+  "DNF" => DNF
+  "Emerge" => Emerge
+  "Pacman" => Pacman
+  "Zypper" => Zypper
+  let found = loadSavedFace()
+  if found == nil: quit faceArgHelp
+  return found
 
 method action*(argv: var seq[string], f:Face) : Action {.base.} = INVALID
 

@@ -5,7 +5,6 @@ type
   Target* = ref object of RootObj
   Apt = ref object of Target
   Pacman = ref object of Target
-  Aurman = ref object of Pacman
   Brew = ref object of Target
   Choco = ref object of Target
   DNF = ref object of Target
@@ -29,18 +28,28 @@ proc exec(cmd:string,  args:seq[string]): int =
     a.add quoteShell(args[i])
   result = execShellCmd(a)  
 
+template `..>`(exec:string, target:untyped): untyped =
+  if exec.existsFile(): return target()
 
 proc target*(argv: var seq[string]) : Target =
-  "apt"=>Apt
-  "aurman"=>Aurman
-  "brew"=>Brew
-  "choco"=>Choco
-  "dnf"=>DNF
-  "packer"=>Packer
-  "pacman"=>Pacman
-  "yaourt"=>Yaourt
+  "choco" => Choco
+  "brew" => Brew
+  "apt" => Apt
+  "dnf" => DNF
+  "yaourt" => Yaourt
+  "packer" => Packer
+  "pacman" => Pacman
+  when system.hostOS == "windows":
+    if true: return Choco()
+  elif system.hostOS == "macosx":
+    "/usr/local/Homebrew/bin/brew" ..> Brew
+  elif system.hostOS == "linux":
+    "/usr/bin/apt" ..> Apt
+    "/usr/bin/dnf" ..> DNF
+    "/usr/bin/yaourt" ..> Yaourt
+    "/usr/bin/packer" ..> Packer
+    "/usr/bin/pacman" ..> Pacman
   quit targetArgHelp
-  
 
 method info*(this:Target, args:seq[string]): void {.base.} = return
 method install*(this:Target, args:seq[string]): void {.base.} = return
@@ -111,11 +120,11 @@ def(Pacman, update, "sudo pacman -Sy")
 def(Pacman, upgrade, "sudo pacman -S")
 def(Pacman, upgradeAll, "sudo pacman -Syu")
 
-def(Aurman, install, "aurman -S")
-def(Aurman, list, "aurman -Q")
-def(Aurman, remove, "aurman -R")
-def(Aurman, search, "aurman -Ss")
-def(Aurman, upgradeAll, "aurman -Syu")
+# def(Aurman, install, "aurman -S")
+# def(Aurman, list, "aurman -Q")
+# def(Aurman, remove, "aurman -R")
+# def(Aurman, search, "aurman -Ss")
+# def(Aurman, upgradeAll, "aurman -Syu")
 
 def(Packer, info, "packer -Si")
 def(Packer, install, "packer -S --noedit")

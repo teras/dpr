@@ -3,10 +3,8 @@ import faces,targets, actions
 
 var args = commandLineParams()
 
-var face = args.face
+let face = args.face
 let target = args.target
-if face == nil:
-  face = args.face(strict=true)
 
 case args.action face:
   of INFO:target.info(args)
@@ -20,9 +18,3 @@ case args.action face:
   of UPGRADE:target.upgrade(args)
   of UPGRADEALL:target.upgradeall(args)
   else: quit "Invalid command"
-
-
-#if args2["new"]: 
-#  for name in @(args["<name>"]): 
-#    echo "Creating ship $#" % name 
-
