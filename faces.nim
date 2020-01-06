@@ -10,15 +10,18 @@ type
   Pacman = ref object of Face
   Zypper = ref object of Face
 
+var target_was_saved* = false
+
 let CONFIG_DIR =
   when system.hostOS == "macosx":
     getHomeDir() & "Library/Preferences"
   else:
     getConfigDir()
-let CONFIG_FILE = CONFIG_DIR & DirSep & "dpacker.conf"
+let CONFIG_FILE* = CONFIG_DIR & DirSep & "dpacker.conf"
 const FACE_NAME = "FACE_NAME"
 
 proc saveSelectedFace(faceName:string) =
+  target_was_saved = true
   CONFIG_DIR.createDir()
   var c = newConfig()
   c.setSectionKey("", FACE_NAME, faceName)

@@ -19,6 +19,9 @@ linux:target/${NAME}.linux
 
 windows:target/${NAME}.64.exe
 
+current:${NIMFILES}
+	nim ${COMPILER} ${NIMOPTS} ${NAME}
+
 target/${NAME}.osx:${NIMFILES}
 	mkdir -p target
 	nim ${COMPILER} ${NIMOPTS} --passC="-mmacosx-version-min=10.7 -gfull" --passL="-mmacosx-version-min=10.7 -dead_strip" ${NAME}
