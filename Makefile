@@ -42,4 +42,4 @@ target/${NAME}.64.exe:${NIMFILES}
 
 
 run:osx
-	./target/${NAME}.osx
+	./target/${NAME}.osx --dpacker-help

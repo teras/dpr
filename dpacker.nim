@@ -1,7 +1,12 @@
 from os import commandLineParams
-import faces,targets, actions
+import faces,targets, actions, dpackeropts
 
 var args = commandLineParams()
+if (args.contains("--dpacker-help")):
+  echo fullHelp
+  quit(0)
+if (args.contains("--help")):
+  echo "In order to get help for dpacker itself, please issue the \"--dpacker-help\" command."
 
 let face = args.face
 let target = args.target

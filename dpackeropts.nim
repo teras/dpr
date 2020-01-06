@@ -5,8 +5,7 @@ proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
       return true
   false
 
-const faceArgHelp* =  """Please select one of the desired faces:
-  --apt-face
+const facesList* = """  --apt-face
   --brew-face
   --choco-face
   --dnf-face
@@ -14,12 +13,34 @@ const faceArgHelp* =  """Please select one of the desired faces:
   --pacman-face
   --zypper-face"""
 
-const targetArgHelp* = """Please select one of the desired targets:
-  --apt
-  --aurman
+const targetsList* = """  --apt
   --brew
   --choco
   --dnf
   --packer
   --pacman
   --yaourt"""
+
+const faceArgHelp* =  """Please select one of the desired faces:
+""" & facesList
+
+const targetArgHelp* = """Please select one of the desired targets:
+""" & targetsList
+
+const fullHelp* = """
+
+dpacker: A meta-package interface to most common packaging systems.
+Instead of learning the syntax of a package manager, let dpacker do the translation for you.
+
+Usage: dpacker [--FACE] [--TARGET] OTHER_OPTIONS...
+
+The --FACE option should be used at least once. On consecutive runs, the application remembers the last face used. 
+
+The --TARGET option could be guessed based on the current system. This property is not saved.
+
+List of valid --FACE options:
+""" & facesList & """
+
+
+List of valid --TARGET options:
+""" & targetsList
