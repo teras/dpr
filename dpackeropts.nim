@@ -1,3 +1,5 @@
+const VERSION* = "v0.1"
+
 proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
   for i in 0..<args.len:
     if args[i]==a:
@@ -31,6 +33,8 @@ const fullHelp* = """
 
 dpacker: A meta-package interface to most common packaging systems.
 Instead of learning the syntax of a package manager, let dpacker do the translation for you.
+Version """ & VERSION & """
+
 
 Usage: dpacker [--FACE] [--TARGET] OTHER_OPTIONS...
 
