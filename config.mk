@@ -6,4 +6,6 @@ COMPILER=c
 #WINAPP=gui
 WINAPP=console
 
+EXECNAME=dpr
+
 RUNARGS=--dpacker-help
