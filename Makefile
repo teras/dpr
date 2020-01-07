@@ -9,7 +9,7 @@ desktop:osx linux windows
 all:desktop pi
 
 clean:
-	rm -rf target nimcache
+	rm -rf target nimcache ${NAME}
 
 osx:target/${NAME}.osx
 
@@ -20,7 +20,6 @@ windows:target/${NAME}.64.exe
 pi:target/${NAME}.arm.linux target/${NAME}.arm64.linux
 
 current:${NIMFILES}
-	mkdir -p target
 	nim ${COMPILER} ${ALLNIMOPTS} ${NAME}
 
 target/${NAME}.osx:${NIMFILES}
