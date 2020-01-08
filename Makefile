@@ -10,6 +10,8 @@ endif
 
 DOCOMPRESS:=$(shell echo $(COMPRESS) | tr A-Z a-z | cut -c1-1)
 
+NIMFILES:=$(wildcard *.nim *.c)
+
 desktop:osx linux windows
 
 all:desktop pi
