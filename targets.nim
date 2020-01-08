@@ -57,7 +57,7 @@ method files*(this:Target, args:seq[string]): void {.base.} = return
 method list*(this:Target, args:seq[string]): void {.base.} = return
 method remove*(this:Target, args:seq[string]): void {.base.} = return
 method search*(this:Target, args:seq[string]): void {.base.} = return
-method searchfile*(this:Target, args:seq[string]): void {.base.} = return
+method where*(this:Target, args:seq[string]): void {.base.} = return
 method update*(this:Target, args:seq[string]): void {.base.} = return
 method upgrade*(this:Target, args:seq[string]): void {.base.} = return
 method upgradeall*(this:Target, args:seq[string]): void {.base.} = return
@@ -68,7 +68,7 @@ def(Apt, files, "dpkg -L")
 def(Apt, list, "apt list --installed")
 def(Apt, remove, "sudo apt-get remove")
 def(Apt, search, "apt-cache search")
-def(Apt, searchfile, "apt-file search")
+def(Apt, where, "apt-file search")
 def(Apt, update, "sudo apt-get update")
 def(Apt, upgrade, "sudo apt-get upgrade")
 def(Apt, upgradeall, "sudo apt-get upgrade")
@@ -79,7 +79,7 @@ def(Brew, files, "brew list")
 def(Brew, list, "brew list")
 def(Brew, remove, "brew uninstall")
 def(Brew, search, "brew search")
-def(Brew, searchfile, "brew search")
+def(Brew, where, "brew search")
 def(Brew, update, "brew update")
 def(Brew, upgrade, "brew upgrade")
 def(Brew, upgradeAll, "brew upgrade")
@@ -90,7 +90,7 @@ ns(Choco, files)
 def(Choco, list, "choco search --local-only")
 def(Choco, remove, "choco uninstall")
 def(Choco, search, "choco search")
-def(Choco, searchfile, "choco search")
+def(Choco, where, "choco search")
 ns(Choco, update)
 def(Choco, upgrade, "choco upgrade")
 def(Choco, upgradeAll, "choco upgrade all")
@@ -101,7 +101,7 @@ def(DNF, files, "rpm --query --list")
 def(DNF, list, "dnf list installed")
 def(DNF, remove, "dnf remove")
 def(DNF, search, "dnf search")
-method searchfile(this:DNF, args:seq[string]): void =
+method where(this:DNF, args:seq[string]): void =
   var argsm = args
   if argsm.len>0: argsm[0] = "*/" & argsm[0]
   discard exec("dnf provides", argsm)
@@ -115,7 +115,7 @@ def(Pacman, files, "pacman -Ql")
 def(Pacman, list, "pacman -Q")
 def(Pacman, remove, "sudo pacman -R")
 def(Pacman, search, "pacman -Ss")
-def(Pacman, searchfile, "pkgfile")
+def(Pacman, where, "pkgfile")
 def(Pacman, update, "sudo pacman -Sy")
 def(Pacman, upgrade, "sudo pacman -S")
 def(Pacman, upgradeAll, "sudo pacman -Syu")

@@ -11,6 +11,7 @@ const facesList* = """  --apt-face
   --brew-face
   --choco-face
   --dnf-face
+  --dpacker-face
   --emerge-face
   --pacman-face
   --zypper-face"""
@@ -22,9 +23,6 @@ const targetsList* = """  --apt
   --packer
   --pacman
   --yaourt"""
-
-const faceArgHelp* =  """Please select one of the desired faces:
-""" & facesList
 
 const targetArgHelp* = """Please select one of the desired targets:
 """ & targetsList

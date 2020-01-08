@@ -18,7 +18,7 @@ case args.action face:
   of LIST:target.list(args)
   of REMOVE:target.remove(args)
   of SEARCH:target.search(args)
-  of SEARCHFILE:target.searchfile(args)
+  of WHERE:target.where(args)
   of UPDATE:target.update(args)
   of UPGRADE:target.upgrade(args)
   of UPGRADEALL:target.upgradeall(args)

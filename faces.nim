@@ -2,6 +2,7 @@ import actions, dpackeropts, os, parsecfg, streams, strutils
 
 type
   Face* = ref object of RootObj
+  DPacker = ref object of Face
   Apt = ref object of Face
   Brew = ref object of Face
   Choco = ref object of Face
@@ -32,6 +33,7 @@ proc loadSavedFace(): Face =
     let filestream = newFileStream(open(CONFIG_FILE, fmRead))
     defer: filestream.close()
     case filestream.loadConfig(CONFIG_FILE).getSectionValue("", FACE_NAME):
+      of "DPacker": return DPacker()
       of "Apt": return Apt()
       of "Brew": return Brew()
       of "Choco": return Choco()
@@ -85,6 +87,7 @@ template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
     return if argv.len == 0 : empty  else : nonEmpty
 
 proc face*(argv: var seq[string]) : Face =
+  "DPacker" => DPacker
   "Apt" => Apt
   "Brew" => Brew
   "Choco" => Choco
@@ -93,10 +96,25 @@ proc face*(argv: var seq[string]) : Face =
   "Pacman" => Pacman
   "Zypper" => Zypper
   let found = loadSavedFace()
-  if found == nil: quit faceArgHelp
-  return found
+  if found == nil:
+    echo """To select and store a face, please use one of the following options in future invocations:
+""" & facesList & """
+
+No faces selected. The default (dpacker) face will be used.
+"""
+  return DPacker()
 
 method action*(argv: var seq[string], f:Face) : Action {.base.} = INVALID
+
+method action(argv: var seq[string], f:DPacker) : Action =
+  select INFO, "info"
+  select INSTALL, "install"
+  select LIST, FILES, "list"
+  select REMOVE, "remove"
+  select SEARCH, "search"
+  select WHERE, "where"
+  select UPDATE, "update"
+  select UPGRADEALL, UPGRADE, "upgrade"
 
 method action(argv: var seq[string], f:Apt) : Action =
   select INFO, "show"
@@ -115,7 +133,6 @@ method action(argv: var seq[string], f:Brew) : Action =
   select SEARCH, "search"
   select UPDATE, "update"
   select LIST, FILES, "list"
-  select SEARCHFILE, "searchfile"
   select UPGRADEALL, UPGRADE, "upgrade"
 
 method action(argv: var seq[string], f:Choco) : Action =
