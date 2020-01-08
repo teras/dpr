@@ -9,3 +9,5 @@ WINAPP=console
 EXECNAME=dpr
 
 RUNARGS=--dpacker-help
+
+COMPRESS=yes
