@@ -12,12 +12,13 @@ DOCOMPRESS:=$(shell echo $(COMPRESS) | tr A-Z a-z | cut -c1-1)
 
 NIMFILES:=$(wildcard *.nim *.c)
 
-desktop:osx linux windows
+current:target/${EXECNAME}
 
 all:desktop pi
 
-clean:
-	rm -rf target nimcache ${NAME}
+desktop:osx linux windows
+
+pi:target/${EXECNAME}.arm.linux target/${EXECNAME}.arm64.linux
 
 osx:target/${EXECNAME}.osx
 
@@ -25,9 +26,8 @@ linux:target/${EXECNAME}.linux
 
 windows:target/${EXECNAME}.64.exe
 
-pi:target/${EXECNAME}.arm.linux target/${EXECNAME}.arm64.linux
-
-current:target/${EXECNAME}
+clean:
+	rm -rf target nimcache ${NAME}
 
 target/${EXECNAME}:${NIMFILES}
 	nim ${COMPILER} ${ALLNIMOPTS} ${NAME}
