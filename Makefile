@@ -27,8 +27,12 @@ windows:target/${EXECNAME}.64.exe
 
 pi:target/${EXECNAME}.arm.linux target/${EXECNAME}.arm64.linux
 
-current:${NIMFILES}
+current:target/${EXECNAME}
+
+target/${EXECNAME}:${NIMFILES}
 	nim ${COMPILER} ${ALLNIMOPTS} ${NAME}
+	mkdir -p target
+	mv ${NAME} target/${EXECNAME}
 
 target/${EXECNAME}.osx:${NIMFILES}
 	mkdir -p target
