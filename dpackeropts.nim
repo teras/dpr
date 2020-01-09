@@ -1,5 +1,7 @@
 const VERSION* = "v0.1"
 
+const MAXOPTS* = 1000000
+
 proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
   for i in 0..<args.len:
     if args[i]==a:

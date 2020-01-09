@@ -1,4 +1,4 @@
-import actions, dpackeropts, os, parsecfg, streams, strutils
+import actions, dpackeropts, os, parsecfg, streams, strutils, algorithm
 
 type
   Face* = ref object of RootObj
@@ -12,6 +12,7 @@ type
   Zypper = ref object of Face
 
 var target_was_saved* = false
+var first_option* = MAXOPTS
 
 let CONFIG_DIR =
   when system.hostOS == "macosx":
@@ -32,14 +33,15 @@ proc loadSavedFace(): Face =
   if CONFIG_FILE.fileExists():
     let filestream = newFileStream(open(CONFIG_FILE, fmRead))
     defer: filestream.close()
-    case filestream.loadConfig(CONFIG_FILE).getSectionValue("", FACE_NAME):
-      of "DPacker": return DPacker()
-      of "Apt": return Apt()
-      of "Brew": return Brew()
-      of "Choco": return Choco()
-      of "DNF": return DNF()
-      of "Emerge": return Emerge()
-      of "Pacman": return Pacman()
+    let facename = filestream.loadConfig(CONFIG_FILE).getSectionValue("", FACE_NAME).toLowerAscii()
+    case facename:
+      of "dpacker": return DPacker()
+      of "apt": return Apt()
+      of "brew": return Brew()
+      of "choco": return Choco()
+      of "dnf": return DNF()
+      of "emerge": return Emerge()
+      of "pacman": return Pacman()
       of "Zypper": return Zypper()
   return nil
 
@@ -49,18 +51,29 @@ template `=>`(name: string, face:untyped) =
     return face()
 
 proc toAction(args: var seq[string], m: seq[seq[string]]) : bool =
-  var match = 0
   if args.len < m.len: return false
+  var todelete = newSeq[int](0)
+  var minposition = MAXOPTS
   for i in 0..<m.len:
-    for j in 0..<m[i].len:
-      if args[i] == m[i][j]:
-        match.inc
-        continue
-  if (match==m.len):
-    for i in 0..<match:
-        args.delete(0)
-    return true
-  return false
+    var found = -1
+    block innerloop:
+      for j in 0..<m[i].len:
+        for k in 0..<args.len:
+          if m[i][j] == args[k]:
+            found = k
+            if found < minposition:
+              minposition = found
+            break innerloop
+    if found < 0: # not found
+      return false
+    todelete.add(found)
+    
+  # Everything was found, return true and delete found items
+  first_option = minposition
+  todelete = todelete.sorted(system.cmp).reversed()
+  for i in todelete:
+    args.delete(i)
+  return true
 
 proc convs(args:varargs[string]) : seq[seq[string]] = 
   result = newSeq[seq[string]](args.len)
@@ -96,8 +109,9 @@ proc face*(argv: var seq[string]) : Face =
   "Pacman" => Pacman
   "Zypper" => Zypper
   let found = loadSavedFace()
-  if found == nil:
-    echo """To select and store a face, please use one of the following options in future invocations:
+  if found != nil:
+    return found
+  echo """To select and store a face, please use one of the following options in future invocations:
 """ & facesList & """
 
 No faces selected. The default (dpacker) face will be used.
