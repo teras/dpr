@@ -22,6 +22,7 @@ case args.action face:
   of UPDATE:target.update(args)
   of UPGRADE:target.upgrade(args)
   of UPGRADEALL:target.upgradeall(args)
+  of PASSTHROUGH:target.passthrough(args)
   else: 
     if not target_was_saved:
       quit "Invalid command"

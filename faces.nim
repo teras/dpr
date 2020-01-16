@@ -129,6 +129,7 @@ method action(argv: var seq[string], f:DPacker) : Action =
   select WHERE, "where"
   select UPDATE, "update"
   select UPGRADEALL, UPGRADE, "upgrade"
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:Apt) : Action =
   select INFO, "show"
@@ -139,6 +140,7 @@ method action(argv: var seq[string], f:Apt) : Action =
   select SEARCH, "search"
   select UPDATE, "update"
   select UPGRADEALL, UPGRADE, "upgrade"
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:Brew) : Action =
   select INFO, "info"
@@ -148,6 +150,7 @@ method action(argv: var seq[string], f:Brew) : Action =
   select UPDATE, "update"
   select LIST, FILES, "list"
   select UPGRADEALL, UPGRADE, "upgrade"
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:Choco) : Action =
   select INFO, "info"
@@ -157,6 +160,7 @@ method action(argv: var seq[string], f:Choco) : Action =
   select SEARCH, "search"
   select UPGRADEALL, "upgrade", "all"
   select UPGRADE, "upgrade"
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:DNF) : Action =
   select INFO, "info"
@@ -168,6 +172,7 @@ method action(argv: var seq[string], f:DNF) : Action =
   select UPGRADEALL, UPGRADE, "upgrade"
   select FILES, @["-q", "--query"], @["-l", "--list"]
   select FILES, @["-l", "--list"], @["-q", "--query"]
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:Emerge) : Action =
   select INFO, s= @["-S", "--searchdesc"]
@@ -176,6 +181,7 @@ method action(argv: var seq[string], f:Emerge) : Action =
   select UPGRADE, "-u"
   select LIST, "-e"
   select FILES, "files"
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:Pacman) : Action =
   select UPGRADEALL, @["-S", "--sync"], @["-y", "--refresh"], @["-u", "--sysupgrade"]
@@ -188,6 +194,7 @@ method action(argv: var seq[string], f:Pacman) : Action =
   select UPGRADE, s= @["-S", "--sync"]
   select LIST, s= @["-Q", "--query"]
   select REMOVE, s= @["-R", "--remove"]
+  return PASSTHROUGH
 
 method action(argv: var seq[string], f:Zypper) : Action =
   select INFO, "info"
@@ -196,3 +203,4 @@ method action(argv: var seq[string], f:Zypper) : Action =
   select SEARCH, "search"
   select UPDATE, "refresh"
   select UPGRADE, "update"
+  return PASSTHROUGH

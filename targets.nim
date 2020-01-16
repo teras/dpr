@@ -64,6 +64,7 @@ method where*(this:Target, args:seq[string]): void {.base.} = return
 method update*(this:Target, args:seq[string]): void {.base.} = return
 method upgrade*(this:Target, args:seq[string]): void {.base.} = return
 method upgradeall*(this:Target, args:seq[string]): void {.base.} = return
+method passthrough*(this:Target, args:seq[string]): void {.base.} = return
 
 def(Apt, info, "apt-cache", "show")
 def(Apt, install, "sudo apt-get", "install")
@@ -75,6 +76,7 @@ def(Apt, where, "apt-file", "search")
 def(Apt, update, "sudo apt-get", "update")
 def(Apt, upgrade, "sudo apt-get", "upgrade")
 def(Apt, upgradeall, "sudo apt-get", "upgrade")
+def(Apt, passthrough, "sudo apt-get", "")
 
 def(Brew, info, "brew", "info")
 def(Brew, install, "brew", "install")
@@ -86,6 +88,7 @@ def(Brew, where, "brew", "search")
 def(Brew, update, "brew", "update")
 def(Brew, upgrade, "brew", "upgrade")
 def(Brew, upgradeAll, "brew", "upgrade")
+def(Brew, passthrough, "brew", "")
 
 def(Choco, info, "choco", "info")
 def(Choco, install, "choco", "install")
@@ -97,6 +100,7 @@ def(Choco, where, "choco", "search")
 ns(Choco, update)
 def(Choco, upgrade, "choco", "upgrade")
 def(Choco, upgradeAll, "choco", "upgrade all")
+def(Choco, passthrough, "choco", "")
 
 def(DNF, info, "dnf", "info")
 def(DNF, install, "dnf", "install")
@@ -111,6 +115,7 @@ method where(this:DNF, args:seq[string]): void =
 def(DNF, update, "dnf", "check-update")
 def(DNF, upgrade, "dnf", "upgrade")
 def(DNF, upgradeAll, "dnf", "upgrade")
+def(DNF, passthrough, "dnf", "")
 
 def(Pacman, info, "pacman", "-Si")
 def(Pacman, install, "sudo pacman", "-S")
@@ -122,6 +127,7 @@ def(Pacman, where, "pkgfile", "")
 def(Pacman, update, "sudo pacman", "-Sy")
 def(Pacman, upgrade, "sudo pacman", "-S")
 def(Pacman, upgradeAll, "sudo pacman", "-Syu")
+def(Pacman, passthrough, "sudo pacman", "")
 
 # def(Aurman, install, "aurman", "-S")
 # def(Aurman, list, "aurman", "-Q")
@@ -133,8 +139,10 @@ def(Packer, info, "packer", "-Si")
 def(Packer, install, "packer", "-S --noedit")
 def(Packer, search, "packer", "-Ss")
 def(Packer, upgradeAll, "packer", "-Syu --noedit")
+def(Packer, passthrough, "packer", "")
 
 def(Yaourt, info, "yaourt", "-Si")
 def(Yaourt, install, "yaourt", "-S")
 def(Yaourt, search, "yaourt", "-Ss")
 def(Yaourt, upgradeAll, "yaourt", "-Sua")
+def(Yaourt, passthrough, "yaourt", "")
