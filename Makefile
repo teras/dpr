@@ -87,12 +87,12 @@ target/${EXECNAME}.64.exe:${NIMFILES}
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.64.exe ; fi
 
 install:all
-	mkdir -p ${DEST}/darwin-x86_64/ && mv target/${EXECNAME}.osx ${DEST}/darwin-x86_64/${EXECNAME}
-	mkdir -p ${DEST}/linux-x86_64/ && mv target/${EXECNAME}.linux ${DEST}/linux-x86_64/${EXECNAME}
-	mkdir -p ${DEST}/linux-arm && mv target/${EXECNAME}.arm.linux ${DEST}/linux-arm/${EXECNAME}
-	mkdir -p ${DEST}/linux-arm64 && mv target/${EXECNAME}.arm64.linux ${DEST}/linux-arm64/${EXECNAME}
-	mkdir -p ${DEST}/windows-x86_64 && mv target/${EXECNAME}.64.exe ${DEST}/windows-x86_64/${EXECNAME}.exe
-	mkdir -p ${DEST}/windows-i686 && mv target/${EXECNAME}.32.exe ${DEST}/windows-i686/${EXECNAME}.exe
+	mkdir -p ${DEST}/darwin-x86_64/ && cp target/${EXECNAME}.osx ${DEST}/darwin-x86_64/${EXECNAME}
+	mkdir -p ${DEST}/linux-x86_64/ && cp target/${EXECNAME}.linux ${DEST}/linux-x86_64/${EXECNAME}
+	mkdir -p ${DEST}/linux-arm && cp target/${EXECNAME}.arm.linux ${DEST}/linux-arm/${EXECNAME}
+	mkdir -p ${DEST}/linux-arm64 && cp target/${EXECNAME}.arm64.linux ${DEST}/linux-arm64/${EXECNAME}
+	mkdir -p ${DEST}/windows-x86_64 && cp target/${EXECNAME}.64.exe ${DEST}/windows-x86_64/${EXECNAME}.exe
+	mkdir -p ${DEST}/windows-i686 && cp target/${EXECNAME}.32.exe ${DEST}/windows-i686/${EXECNAME}.exe
 
 run:current
 	./target/${EXECNAME} ${RUNARGS}

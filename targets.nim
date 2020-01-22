@@ -1,5 +1,7 @@
 import dpackeropts, faces, sequtils
-import os
+import posix, os
+
+let root = when system.hostOS == "windows": true else: getuid() == 0
 
 type 
   Target* = ref object of RootObj
@@ -66,17 +68,19 @@ method upgrade*(this:Target, args:seq[string]): void {.base.} = return
 method upgradeall*(this:Target, args:seq[string]): void {.base.} = return
 method passthrough*(this:Target, args:seq[string]): void {.base.} = return
 
+template sudo(): string = (if root:"" else:"sudo ")
+
 def(Apt, info, "apt-cache", "show")
-def(Apt, install, "sudo apt-get", "install")
+def(Apt, install, sudo() &  "apt-get", "install")
 def(Apt, files, "dpkg", "-L")
 def(Apt, list, "apt", "list --installed")
-def(Apt, remove, "sudo apt-get", "remove")
+def(Apt, remove, sudo() &  "apt-get", "remove")
 def(Apt, search, "apt-cache", "search")
 def(Apt, where, "apt-file", "search")
-def(Apt, update, "sudo apt-get", "update")
-def(Apt, upgrade, "sudo apt-get", "upgrade")
-def(Apt, upgradeall, "sudo apt-get", "upgrade")
-def(Apt, passthrough, "sudo apt-get", "")
+def(Apt, update, sudo() & "apt-get", "update")
+def(Apt, upgrade, sudo() & "apt-get", "upgrade")
+def(Apt, upgradeall, sudo() & "apt-get", "upgrade")
+def(Apt, passthrough, sudo() & "apt-get", "")
 
 def(Brew, info, "brew", "info")
 def(Brew, install, "brew", "install")
@@ -118,16 +122,16 @@ def(DNF, upgradeAll, "dnf", "upgrade")
 def(DNF, passthrough, "dnf", "")
 
 def(Pacman, info, "pacman", "-Si")
-def(Pacman, install, "sudo pacman", "-S")
+def(Pacman, install, sudo() & "pacman", "-S")
 def(Pacman, files, "pacman", "-Ql")
 def(Pacman, list, "pacman", "-Q")
-def(Pacman, remove, "sudo pacman", "-R")
+def(Pacman, remove, sudo() & "pacman", "-R")
 def(Pacman, search, "pacman", "-Ss")
 def(Pacman, where, "pkgfile", "")
-def(Pacman, update, "sudo pacman", "-Sy")
-def(Pacman, upgrade, "sudo pacman", "-S")
-def(Pacman, upgradeAll, "sudo pacman", "-Syu")
-def(Pacman, passthrough, "sudo pacman", "")
+def(Pacman, update, sudo() & "pacman", "-Sy")
+def(Pacman, upgrade, sudo() & "pacman", "-S")
+def(Pacman, upgradeAll, sudo() & "pacman", "-Syu")
+def(Pacman, passthrough, sudo() & "pacman", "")
 
 # def(Aurman, install, "aurman", "-S")
 # def(Aurman, list, "aurman", "-Q")

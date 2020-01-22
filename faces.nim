@@ -91,9 +91,9 @@ template select(action:Action, s:varargs[seq[string]]) =
 template select(action:Action, m:varargs[string]) =
   if argv.toAction(m.convs) : return action
 
-template select(empty:Action, nonEmpty:Action, s:varargs[seq[string]]) =
-  if argv.toAction(s.convm) :
-    return if argv.len == 0 : empty  else : nonEmpty
+# template select(empty:Action, nonEmpty:Action, s:varargs[seq[string]]) =
+#   if argv.toAction(s.convm) :
+#     return if argv.len == 0 : empty  else : nonEmpty
 
 template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
   if argv.toAction(m.convs) :
