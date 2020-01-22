@@ -124,9 +124,9 @@ method action(argv: var seq[string], f:DPacker) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select LIST, FILES, "list"
-  select REMOVE, "remove"
+  select REMOVE, s= @["remove", "uninstall"]
   select SEARCH, "search"
-  select WHERE, "where"
+  select WHERE, s= @["where", "file", "files"]
   select UPDATE, "update"
   select UPGRADEALL, UPGRADE, "upgrade"
   return PASSTHROUGH
