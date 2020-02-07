@@ -1,4 +1,4 @@
-const VERSION* = "v0.1"
+const VERSION* {.strdefine.} : string = "<undefined>"
 
 const MAXOPTS* = 1000000
 

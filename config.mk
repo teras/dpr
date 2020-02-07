@@ -1,4 +1,5 @@
 NAME=dpacker
+VERSION=0.1.1
 
 NIMOPTS=--multimethods:on
 COMPILER=c

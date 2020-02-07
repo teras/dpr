@@ -4,10 +4,14 @@ include config.mk
 
 DEST:=~/Works/System/arch
 
-ALLNIMOPTS:=-d:release --opt:size $(NIMOPTS)
+ALLNIMOPTS=-d:release -d:VERSION=$(VERSION) --opt:size $(NIMOPTS)
 
 ifeq ($(EXECNAME),)
 EXECNAME:=$(NAME)
+endif
+
+ifeq ($(VERSION),)
+VERSION:=0.1
 endif
 
 ifeq ($(COMPILER),)
@@ -28,7 +32,7 @@ endif
 
 DOCOMPRESS:=$(shell echo $(COMPRESS) | tr A-Z a-z | cut -c1-1)
 
-NIMFILES:=$(wildcard *.nim *.c)
+BUILDDEP:=$(wildcard *.nim *.c Makefile config.mk)
 
 current:target/${EXECNAME}
 
@@ -47,37 +51,37 @@ windows:target/${EXECNAME}.64.exe
 clean:
 	rm -rf target nimcache ${NAME}
 
-target/${EXECNAME}:${NIMFILES}
+target/${EXECNAME}:${BUILDDEP}
 	${NIMVER} nim ${COMPILER} ${ALLNIMOPTS} ${NAME}
 	mkdir -p target
 	mv ${NAME} target/${EXECNAME}
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME} ; fi
 
-target/${EXECNAME}.osx:${NIMFILES}
+target/${EXECNAME}.osx:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --os:macosx --passC='-mmacosx-version-min=10.7 -gfull' --passL='-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin19-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.osx
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.osx ; fi
 
-target/${EXECNAME}.linux:${NIMFILES}
+target/${EXECNAME}.linux:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} ${NAME} && strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.linux
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.linux ; fi
 
-target/${EXECNAME}.arm.linux:${NIMFILES}
+target/${EXECNAME}.arm.linux:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --cpu:arm --os:linux ${NAME} && arm-linux-gnueabi-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.arm.linux
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.arm.linux ; fi
 
-target/${EXECNAME}.arm64.linux:${NIMFILES}
+target/${EXECNAME}.arm64.linux:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --cpu:arm64 --os:linux ${NAME} && aarch64-linux-gnu-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.arm64.linux
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.arm64.linux ; fi
 
-target/${EXECNAME}.64.exe:${NIMFILES}
+target/${EXECNAME}.64.exe:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} -d:mingw --cpu:i386  --app:${WINAPP} ${NAME} && i686-w64-mingw32-strip   ${NAME}.exe"
 	mv ${NAME}.exe target/${EXECNAME}.32.exe
