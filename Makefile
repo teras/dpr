@@ -1,4 +1,7 @@
-.PHONY: clean all desktop osx linux pi windows current install run
+.PHONY: clean all desktop osx linux pi windows current install run preosx prelinux prepi prewindows
+
+# needs to be defined before include
+default:current
 
 include config.mk
 
@@ -40,7 +43,7 @@ all:desktop pi
 
 desktop:osx linux windows
 
-pi:target/${EXECNAME}.arm.linux target/${EXECNAME}.arm64.linux
+pi:target/${EXECNAME}.arm64.linux
 
 osx:target/${EXECNAME}.osx
 
@@ -49,7 +52,7 @@ linux:target/${EXECNAME}.linux
 windows:target/${EXECNAME}.64.exe
 
 clean:
-	rm -rf target nimcache ${NAME}
+	rm -rf target nimcache ${NAME} ${NAME}.exe
 
 target/${EXECNAME}:${BUILDDEP}
 	${NIMVER} nim ${COMPILER} ${ALLNIMOPTS} ${NAME}
@@ -57,31 +60,28 @@ target/${EXECNAME}:${BUILDDEP}
 	mv ${NAME} target/${EXECNAME}
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME} ; fi
 
-target/${EXECNAME}.osx:${BUILDDEP}
+target/${EXECNAME}.osx:${BUILDDEP} preosx
 	mkdir -p target
-	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --os:macosx --passC='-mmacosx-version-min=10.7 -gfull' --passL='-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin19-strip ${NAME}"
+	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --os:macosx --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin19-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.osx
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.osx ; fi
 
-target/${EXECNAME}.linux:${BUILDDEP}
+target/${EXECNAME}.linux:${BUILDDEP} prelinux
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} ${NAME} && strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.linux
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.linux ; fi
 
-target/${EXECNAME}.arm.linux:${BUILDDEP}
+target/${EXECNAME}.arm64.linux:${BUILDDEP} prepi
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --cpu:arm --os:linux ${NAME} && arm-linux-gnueabi-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.arm.linux
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.arm.linux ; fi
-
-target/${EXECNAME}.arm64.linux:${BUILDDEP}
-	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} --cpu:arm64 --os:linux ${NAME} && aarch64-linux-gnu-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.arm64.linux
 	if [ "$(DOCOMPRESS)" = "y" ] ; then upx --best target/${EXECNAME}.arm64.linux ; fi
 
-target/${EXECNAME}.64.exe:${BUILDDEP}
+target/${EXECNAME}.64.exe:${BUILDDEP} prewindows
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app teras/nimcross bash -c "${NIMVER} ${NIMBLE} nim ${COMPILER} ${ALLNIMOPTS} -d:mingw --cpu:i386  --app:${WINAPP} ${NAME} && i686-w64-mingw32-strip   ${NAME}.exe"
 	mv ${NAME}.exe target/${EXECNAME}.32.exe
