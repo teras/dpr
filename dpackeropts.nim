@@ -9,6 +9,15 @@ proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
       return true
   false
 
+const dpackerCmd = """  info
+  install
+  list
+  remove|uninstall
+  search
+  where|file|files
+  update
+  upgrade"""
+
 const facesList* = """  --apt-face
   --brew-face
   --choco-face
@@ -47,4 +56,8 @@ List of valid --FACE options:
 
 
 List of valid --TARGET options:
-""" & targetsList
+""" & targetsList & """
+
+
+List of possible commands, with dpacker as target:
+""" & dpackerCmd

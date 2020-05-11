@@ -1,5 +1,5 @@
 NAME=dpacker
-VERSION=0.1.1
+VERSION=0.2
 
 NIMOPTS=--multimethods:on
 COMPILER=c
@@ -11,4 +11,4 @@ EXECNAME=dpr
 
 RUNARGS=--dpacker-help
 
-COMPRESS=yes
+COMPRESS=true
