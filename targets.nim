@@ -10,6 +10,7 @@ type
   Brew = ref object of Target
   Choco = ref object of Target
   DNF = ref object of Target
+  Yay = ref object of Target
   Packer = ref object of Pacman
   Yaourt = ref object of Pacman
 
@@ -41,6 +42,7 @@ proc target*(argv: var seq[string]) : Target =
   "brew" => Brew
   "apt" => Apt
   "dnf" => DNF
+  "yay" => Yay
   "yaourt" => Yaourt
   "packer" => Packer
   "pacman" => Pacman
@@ -51,8 +53,9 @@ proc target*(argv: var seq[string]) : Target =
   elif system.hostOS == "linux":
     "/usr/bin/apt" ..> Apt
     "/usr/bin/dnf" ..> DNF
-    "/usr/bin/yaourt" ..> Yaourt
+    "/usr/bin/yay" ..> Yay
     "/usr/bin/packer" ..> Packer
+    "/usr/bin/yaourt" ..> Yaourt
     "/usr/bin/pacman" ..> Pacman
   quit targetArgHelp
 
@@ -138,6 +141,18 @@ def(Pacman, passthrough, sudo() & "pacman", "")
 # def(Aurman, remove, "aurman", "-R")
 # def(Aurman, search, "aurman", "-Ss")
 # def(Aurman, upgradeAll, "aurman", "-Syu")
+
+def(Yay, info, "yay", "-Si")
+def(Yay, install, "yay", "-S")
+def(Yay, files, "yay", "-Ql")
+def(Yay, list, "yay", "-Q")
+def(Yay, remove, "yay", "-R")
+def(Yay, search, "yay", "-Ss")
+def(Yay, where, "pkgfile", "")
+def(Yay, update, "yay", "-Sy")
+def(Yay, upgrade, "yay", "-S")
+def(Yay, upgradeAll, "yay", "-Syu")
+def(Yay, passthrough, "yay", "")
 
 def(Packer, info, "packer", "-Si")
 def(Packer, install, "packer", "-S --noedit")

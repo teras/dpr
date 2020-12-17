@@ -33,7 +33,8 @@ const targetsList* = """  --apt
   --dnf
   --packer
   --pacman
-  --yaourt"""
+  --yaourt
+  --yay"""
 
 const targetArgHelp* = """Please select one of the desired targets:
 """ & targetsList
