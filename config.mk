@@ -11,4 +11,4 @@ EXECNAME=dpr
 
 RUNARGS=--dpacker-help
 
-COMPRESS=true
+#COMPRESS=true

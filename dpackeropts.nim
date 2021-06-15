@@ -12,6 +12,7 @@ proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
 const dpackerCmd = """  info
   install
   list
+  orphan
   remove|uninstall
   search
   where|file|files
@@ -31,7 +32,7 @@ const targetsList* = """  --apt
   --brew
   --choco
   --dnf
-  --packer
+  --pikaur
   --pacman
   --yaourt
   --yay"""

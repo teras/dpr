@@ -16,6 +16,7 @@ case args.action face:
   of INSTALL:target.install(args)
   of FILES:target.files(args)
   of LIST:target.list(args)
+  of ORPHAN:target.orphan(args)
   of REMOVE:target.remove(args)
   of SEARCH:target.search(args)
   of WHERE:target.where(args)

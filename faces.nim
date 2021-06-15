@@ -129,6 +129,7 @@ method action(argv: var seq[string], f:DPacker) : Action =
   select WHERE, s= @["where", "file", "files"]
   select UPDATE, "update"
   select UPGRADEALL, UPGRADE, "upgrade"
+  select ORPHAN, "orphan"
   return PASSTHROUGH
 
 method action(argv: var seq[string], f:Apt) : Action =
@@ -194,6 +195,7 @@ method action(argv: var seq[string], f:Pacman) : Action =
   select UPGRADE, s= @["-S", "--sync"]
   select LIST, s= @["-Q", "--query"]
   select REMOVE, s= @["-R", "--remove"]
+  select ORPHAN, s= @["-Q", "--query"], @["-t", "--unrequired"], @["-d", "--deps"]
   return PASSTHROUGH
 
 method action(argv: var seq[string], f:Zypper) : Action =

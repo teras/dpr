@@ -1,4 +1,4 @@
-.PHONY: clean all desktop posix osx linux linux32 linux64 pi windows win32 win64 local install install-only run docker xclean
+.PHONY: clean all desktop posix osx linux linux32 linux64 arm arm32 arm64 windows win32 win64 local install install-only run docker xclean
 
 
 # needs to be defined before include
@@ -8,13 +8,17 @@ include config.mk
 
 DEST:=~/Works/System/bin/arch
 
+ifeq ($(OPTIMIZE),)
+OPTIMIZE:=size
+endif
+
 ifeq ($(DEBUG),true)
-BASENIMOPTS=-d:VERSION=$(VERSION) --opt:size $(NIMOPTS)
+BASENIMOPTS=-d:VERSION=$(VERSION) --opt:$(OPTIMIZE) $(NIMOPTS)
 else
 ifeq ($(DEBUG),full)
 BASENIMOPTS=-d:VERSION=$(VERSION) --debuginfo --linedir:on $(NIMOPTS)
 else
-BASENIMOPTS=-d:release -d:VERSION=$(VERSION) --opt:size $(NIMOPTS)
+BASENIMOPTS=-d:release -d:VERSION=$(VERSION) --opt:$(OPTIMIZE) $(NIMOPTS)
 endif
 endif
 
@@ -35,16 +39,18 @@ WINAPP:=console
 endif
 
 ifeq ($(ALLTARGETS),)
-ALLTARGETS:=desktop pi
+ALLTARGETS:=desktop arm
 endif
 
 ifneq ($(NIMBLE),)
 NIMBLE:=nimble refresh ; nimble -y install $(NIMBLE);
 DOCKERNAME:=teras/nimcross:${NAME}
 DOCKERNAME32:=teras/nimcross32:${NAME}
+DOCKERNAMEOSX:=teras/nimcrossosx:${NAME}
 else
 DOCKERNAME:=teras/nimcross
 DOCKERNAME32:=teras/nimcross32
+DOCKERNAMEOSX:=teras/nimcrossosx
 endif
 
 ifneq ($(NIMVER),)
@@ -65,9 +71,13 @@ all:$(ALLTARGETS)
 
 desktop:osx linux windows
 
-posix:osx linux pi
+posix:osx linux arm
 
-pi:target/${EXECNAME}.aarch64.linux
+arm:arm32 arm64
+
+arm64:target/${EXECNAME}.aarch64.linux
+
+arm32:target/${EXECNAME}.arm.linux
 
 osx:target/${EXECNAME}.osx
 
@@ -93,25 +103,31 @@ docker:
 	mkdir docker.tmp && \
 	echo >docker.tmp/Dockerfile "FROM teras/nimcross" && \
 	echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
-	cd docker.tmp ; docker build -t ${DOCKERNAME} . && \
+	cd docker.tmp ; docker build -t ${DOCKERNAME} . && cd .. &&\
 	rm -rf docker.tmp ; \
         mkdir docker.tmp && \
         echo >docker.tmp/Dockerfile "FROM teras/nimcross32" && \
         echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd docker.tmp ; docker build -t ${DOCKERNAME32} . && \
+        cd docker.tmp ; docker build -t ${DOCKERNAME32} . && cd .. &&\
+        rm -rf docker.tmp ; \
+        mkdir docker.tmp && \
+        echo >docker.tmp/Dockerfile "FROM teras/nimcrossosx" && \
+        echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
+        cd docker.tmp ; docker build -t ${DOCKERNAMEOSX} . && cd ..&&\
         rm -rf docker.tmp ; \
 	fi
+
 
 target/${EXECNAME}:${BUILDDEP}
 	nim ${COMPILER} ${BASENIMOPTS} ${OSXNIMOPTS} ${NAME}
 	mkdir -p target
 	mv ${NAME} target/${EXECNAME}
-	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME} ; fi
+	if [ "$(DOCOMPRESS)" = "t" ] ; then upx target/${EXECNAME} ; fi
 	cp target/${EXECNAME} target/${EXECNAME}.osx
 
 target/${EXECNAME}.osx:${BUILDDEP}
 	mkdir -p target
-	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAME} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${OSXNIMOPTS} --os:macosx --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin19-strip ${NAME} && chown ${UGID} ${NAME}"
+	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAMEOSX} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${OSXNIMOPTS} --os:macosx --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin19-strip ${NAME} && chown ${UGID} ${NAME}"
 	mv ${NAME} target/${EXECNAME}.osx
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.osx ; fi
 
@@ -125,12 +141,17 @@ target/${EXECNAME}.linux32:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAME32} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${LINUXNIMOPTS} --cpu:i386 --passC:-m32 --passL:-m32 ${NAME} && strip ${NAME} ; if [ \"$(DOCOMPRESS)\" = \"t\" ] ; then upx --best ${NAME} ; fi && chown ${UGID} ${NAME}"
 	mv ${NAME} target/${EXECNAME}.linux32
+	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.linux32 ; fi
 
-target/${EXECNAME}.aarch64.linux:${BUILDDEP}
+target/${EXECNAME}.arm.linux:${BUILDDEP}
 	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAME} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${PINIMOPTS} --cpu:arm --os:linux ${NAME} && arm-linux-gnueabi-strip ${NAME} && chown ${UGID} ${NAME}"
 	mv ${NAME} target/${EXECNAME}.arm.linux
-	#if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.arm.linux ; fi
+	patchelf --set-interpreter /lib/ld-linux-armhf.so.3 target/${EXECNAME}.arm.linux
+	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.arm.linux ; fi
+
+target/${EXECNAME}.aarch64.linux:${BUILDDEP}
+	mkdir -p target
 	docker run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAME} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${PINIMOPTS} --cpu:arm64 --os:linux ${NAME} && aarch64-linux-gnu-strip ${NAME} && chown ${UGID} ${NAME}"
 	mv ${NAME} target/${EXECNAME}.aarch64.linux
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.aarch64.linux ; fi

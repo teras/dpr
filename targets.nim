@@ -10,8 +10,8 @@ type
   Brew = ref object of Target
   Choco = ref object of Target
   DNF = ref object of Target
-  Yay = ref object of Target
-  Packer = ref object of Pacman
+  Yay = ref object of Pacman
+  Pikaur = ref object of Pacman
   Yaourt = ref object of Pacman
 
 template `=>`(name: string, target:untyped) =
@@ -44,7 +44,7 @@ proc target*(argv: var seq[string]) : Target =
   "dnf" => DNF
   "yay" => Yay
   "yaourt" => Yaourt
-  "packer" => Packer
+  "pikaur" => Pikaur
   "pacman" => Pacman
   when system.hostOS == "windows":
     if true: return Choco()
@@ -53,8 +53,8 @@ proc target*(argv: var seq[string]) : Target =
   elif system.hostOS == "linux":
     "/usr/bin/apt" ..> Apt
     "/usr/bin/dnf" ..> DNF
+    "/usr/bin/pikaur" ..> Pikaur
     "/usr/bin/yay" ..> Yay
-    "/usr/bin/packer" ..> Packer
     "/usr/bin/yaourt" ..> Yaourt
     "/usr/bin/pacman" ..> Pacman
   quit targetArgHelp
@@ -63,6 +63,7 @@ method info*(this:Target, args:seq[string]): void {.base.} = return
 method install*(this:Target, args:seq[string]): void {.base.} = return
 method files*(this:Target, args:seq[string]): void {.base.} = return
 method list*(this:Target, args:seq[string]): void {.base.} = return
+method orphan*(this:Target, args:seq[string]): void {.base.} = return
 method remove*(this:Target, args:seq[string]): void {.base.} = return
 method search*(this:Target, args:seq[string]): void {.base.} = return
 method where*(this:Target, args:seq[string]): void {.base.} = return
@@ -134,15 +135,13 @@ def(Pacman, where, "pkgfile", "")
 def(Pacman, update, sudo() & "pacman", "-Sy")
 def(Pacman, upgrade, sudo() & "pacman", "-S")
 def(Pacman, upgradeAll, sudo() & "pacman", "-Syu")
+def(Pacman, orphan, "pacman", "-Qqtd")
 def(Pacman, passthrough, sudo() & "pacman", "")
 
 # def(Aurman, install, "aurman", "-S")
 # def(Aurman, list, "aurman", "-Q")
 # def(Aurman, remove, "aurman", "-R")
-# def(Aurman, search, "aurman", "-Ss")
-# def(Aurman, upgradeAll, "aurman", "-Syu")
-
-def(Yay, info, "yay", "-Si")
+# def(Aurman, search, "aurman", "-Ss")def(Yay, info, "yay", "-Si")
 def(Yay, install, "yay", "-S")
 def(Yay, files, "yay", "-Ql")
 def(Yay, list, "yay", "-Q")
@@ -152,13 +151,22 @@ def(Yay, where, "pkgfile", "")
 def(Yay, update, "yay", "-Sy")
 def(Yay, upgrade, "yay", "-S")
 def(Yay, upgradeAll, "yay", "-Syu")
+def(Yay, orphan, "pacman", "-Qqtd")
 def(Yay, passthrough, "yay", "")
 
-def(Packer, info, "packer", "-Si")
-def(Packer, install, "packer", "-S --noedit")
-def(Packer, search, "packer", "-Ss")
-def(Packer, upgradeAll, "packer", "-Syu --noedit")
-def(Packer, passthrough, "packer", "")
+def(Yay, search, "yay", "-Ss")
+def(Yay, update, "yay", "-Sy")
+def(Yay, upgrade, "yay", "-S")
+def(Yay, upgradeAll, "yay", "-Syu")
+def(Yay, passthrough, "yay", "")
+
+def(Pikaur, search, "pikaur", "-Ss")
+def(Pikaur, update, "pikaur", "-Sy")
+def(Pikaur, upgrade, "pikaur --noedit", "-S")
+def(Pikaur, upgradeAll, "pikaur --noedit", "-Syu")
+def(Pikaur, info, "pikaur", "-Si")
+def(Pikaur, install, "pikaur --noedit", "-S")
+def(Pikaur, passthrough, "pikaur", "")
 
 def(Yaourt, info, "yaourt", "-Si")
 def(Yaourt, install, "yaourt", "-S")
