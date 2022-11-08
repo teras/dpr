@@ -9,7 +9,7 @@ proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
       return true
   false
 
-const dpackerCmd = """  info
+const dprCmd = """  info
   install
   list
   orphan
@@ -23,7 +23,7 @@ const facesList* = """  --apt-face
   --brew-face
   --choco-face
   --dnf-face
-  --dpacker-face
+  --dpr-face
   --emerge-face
   --pacman-face
   --zypper-face"""
@@ -42,14 +42,14 @@ const targetArgHelp* = """Please select one of the desired targets:
 
 const fullHelp* = """
 
-dpacker: A meta-package interface to most common packaging systems.
-Instead of learning the syntax of a package manager, let dpacker do the translation for you.
+dpr: A meta-package interface to most common packaging systems.
+Instead of learning the syntax of a package manager, let dpr do the translation for you.
 Version """ & VERSION & """
 
 
-Usage: dpacker [--FACE] [--TARGET] OTHER_OPTIONS...
+Usage: dpr [--FACE] [--TARGET] OTHER_OPTIONS...
 
-The --FACE option should be used at least once. On consecutive runs, the application remembers the last face used. 
+The --FACE option defines the actual command line interface to use. On consecutive runs, the application remembers the last face used. 
 
 The --TARGET option could be guessed based on the current system. This property is not saved.
 
@@ -61,5 +61,5 @@ List of valid --TARGET options:
 """ & targetsList & """
 
 
-List of possible commands, with dpacker as target:
-""" & dpackerCmd
+List of possible commands, with dpr as target:
+""" & dprCmd

@@ -1,4 +1,4 @@
-import dpackeropts, faces, sequtils
+import dpropts, faces, sequtils
 import posix, os
 
 let root = when system.hostOS == "windows": true else: getuid() == 0
@@ -10,6 +10,7 @@ type
   Brew = ref object of Target
   Choco = ref object of Target
   DNF = ref object of Target
+  Paru = ref object of Pacman
   Yay = ref object of Pacman
   Pikaur = ref object of Pacman
   Yaourt = ref object of Pacman
@@ -42,6 +43,7 @@ proc target*(argv: var seq[string]) : Target =
   "brew" => Brew
   "apt" => Apt
   "dnf" => DNF
+  "paru" => Paru
   "yay" => Yay
   "yaourt" => Yaourt
   "pikaur" => Pikaur
@@ -54,6 +56,7 @@ proc target*(argv: var seq[string]) : Target =
     "/usr/bin/apt" ..> Apt
     "/usr/bin/dnf" ..> DNF
     "/usr/bin/pikaur" ..> Pikaur
+    "/usr/bin/paru" ..> Paru
     "/usr/bin/yay" ..> Yay
     "/usr/bin/yaourt" ..> Yaourt
     "/usr/bin/pacman" ..> Pacman
@@ -160,10 +163,17 @@ def(Yay, upgrade, "yay", "-S")
 def(Yay, upgradeAll, "yay", "-Syu")
 def(Yay, passthrough, "yay", "")
 
+
+def(Paru, search, "paru", "-Ss")
+def(Paru, update, "paru", "-Sy")
+def(Paru, upgrade, "paru", "-S")
+def(Paru, upgradeAll, "paru", "-Syu")
+def(Paru, passthrough, "paru", "")
+
 def(Pikaur, search, "pikaur", "-Ss")
 def(Pikaur, update, "pikaur", "-Sy")
 def(Pikaur, upgrade, "pikaur --noedit", "-S")
-def(Pikaur, upgradeAll, "pikaur --noedit", "-Syu")
+def(Pikaur, upgradeAll, "pikaur --noedit --noconfirm", "-Syu")
 def(Pikaur, info, "pikaur", "-Si")
 def(Pikaur, install, "pikaur --noedit", "-S")
 def(Pikaur, passthrough, "pikaur", "")

@@ -1,8 +1,8 @@
-import actions, dpackeropts, os, parsecfg, streams, strutils, algorithm
+import actions, dpropts, os, parsecfg, streams, strutils, algorithm
 
 type
   Face* = ref object of RootObj
-  DPacker = ref object of Face
+  DPR = ref object of Face
   Apt = ref object of Face
   Brew = ref object of Face
   Choco = ref object of Face
@@ -19,7 +19,7 @@ let CONFIG_DIR =
     getHomeDir() & "Library/Preferences"
   else:
     getConfigDir()
-let CONFIG_FILE* = CONFIG_DIR & DirSep & "dpacker.conf"
+let CONFIG_FILE* = CONFIG_DIR & DirSep & "dpr.conf"
 const FACE_NAME = "FACE_NAME"
 
 proc saveSelectedFace(faceName:string) =
@@ -35,7 +35,7 @@ proc loadSavedFace(): Face =
     defer: filestream.close()
     let facename = filestream.loadConfig(CONFIG_FILE).getSectionValue("", FACE_NAME).toLowerAscii()
     case facename:
-      of "dpacker": return DPacker()
+      of "dpr": return DPR()
       of "apt": return Apt()
       of "brew": return Brew()
       of "choco": return Choco()
@@ -100,7 +100,7 @@ template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
     return if argv.len == 0 : empty  else : nonEmpty
 
 proc face*(argv: var seq[string]) : Face =
-  "DPacker" => DPacker
+  "DPR" => DPR
   "Apt" => Apt
   "Brew" => Brew
   "Choco" => Choco
@@ -109,18 +109,11 @@ proc face*(argv: var seq[string]) : Face =
   "Pacman" => Pacman
   "Zypper" => Zypper
   let found = loadSavedFace()
-  if found != nil:
-    return found
-  echo """To select and store a face, please use one of the following options in future invocations:
-""" & facesList & """
-
-No faces selected. The default (dpacker) face will be used.
-"""
-  return DPacker()
+  return if found != nil: found else: DPR()
 
 method action*(argv: var seq[string], f:Face) : Action {.base.} = INVALID
 
-method action(argv: var seq[string], f:DPacker) : Action =
+method action(argv: var seq[string], f:DPR) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select LIST, FILES, "list"

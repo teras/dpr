@@ -1,5 +1,5 @@
-NAME=dpacker
-VERSION=0.2
+NAME=dpr
+VERSION=0.3
 
 NIMOPTS=--multimethods:on
 COMPILER=c
@@ -9,6 +9,6 @@ WINAPP=console
 
 EXECNAME=dpr
 
-RUNARGS=--dpacker-help
+RUNARGS=--dpr-help
 
 #COMPRESS=true

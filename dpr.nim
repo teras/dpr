@@ -1,12 +1,10 @@
 from os import commandLineParams
-import faces,targets, actions, dpackeropts
+import faces,targets, actions, dpropts
 
 var args = commandLineParams()
-if (args.contains("--dpacker-help")):
+if (args.contains("--help") or args.contains("-h")):
   echo fullHelp
-  quit(0)
-if (args.contains("--help")):
-  echo "In order to get help for dpacker itself, please issue the \"--dpacker-help\" command."
+  echo "" ; echo " *** Tools help page ***" ; echo ""
 
 let face = args.face
 let target = args.target
