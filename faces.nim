@@ -2,17 +2,17 @@ import actions, dpropts, os, parsecfg, streams, strutils, algorithm
 
 type
   Face* = ref object of RootObj
-  DPR = ref object of Face
+  Dpr = ref object of Face
   Apt = ref object of Face
   Brew = ref object of Face
   Choco = ref object of Face
-  DNF = ref object of Face
+  Dnf = ref object of Face
   Emerge = ref object of Face
   Pacman = ref object of Face
   Zypper = ref object of Face
 
-var target_was_saved* = false
-var first_option* = MAXOPTS
+var targetWasSaved* = false
+var firstOption* = MAXOPTS
 
 let CONFIG_DIR =
   when system.hostOS == "macosx":
@@ -23,7 +23,7 @@ let CONFIG_FILE* = CONFIG_DIR & DirSep & "dpr.conf"
 const FACE_NAME = "FACE_NAME"
 
 proc saveSelectedFace(faceName:string) =
-  target_was_saved = true
+  targetWasSaved = true
   CONFIG_DIR.createDir()
   var c = newConfig()
   c.setSectionKey("", FACE_NAME, faceName)
@@ -35,7 +35,7 @@ proc loadSavedFace(): Face =
     defer: filestream.close()
     let facename = filestream.loadConfig(CONFIG_FILE).getSectionValue("", FACE_NAME).toLowerAscii()
     case facename:
-      of "dpr": return DPR()
+      of "dpr": return Dpr()
       of "apt": return Apt()
       of "brew": return Brew()
       of "choco": return Choco()
@@ -69,7 +69,7 @@ proc toAction(args: var seq[string], m: seq[seq[string]]) : bool =
     todelete.add(found)
     
   # Everything was found, return true and delete found items
-  first_option = minposition
+  firstOption = minposition
   todelete = todelete.sorted(system.cmp).reversed()
   for i in todelete:
     args.delete(i)
@@ -100,7 +100,7 @@ template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
     return if argv.len == 0 : empty  else : nonEmpty
 
 proc face*(argv: var seq[string]) : Face =
-  "DPR" => DPR
+  "DPR" => Dpr
   "Apt" => Apt
   "Brew" => Brew
   "Choco" => Choco
@@ -109,11 +109,11 @@ proc face*(argv: var seq[string]) : Face =
   "Pacman" => Pacman
   "Zypper" => Zypper
   let found = loadSavedFace()
-  return if found != nil: found else: DPR()
+  return if found != nil: found else: Dpr()
 
-method action*(argv: var seq[string], f:Face) : Action {.base.} = INVALID
+method action*(f:Face, argv: var seq[string]) : Action {.base, locks: "unknown".} = INVALID
 
-method action(argv: var seq[string], f:DPR) : Action =
+method action(f:DPR, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select LIST, FILES, "list"
@@ -125,7 +125,7 @@ method action(argv: var seq[string], f:DPR) : Action =
   select ORPHAN, "orphan"
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:Apt) : Action =
+method action(f:Apt, argv: var seq[string]) : Action =
   select INFO, "show"
   select INSTALL, "install"
   select LIST, "list", "--installed"
@@ -136,7 +136,7 @@ method action(argv: var seq[string], f:Apt) : Action =
   select UPGRADEALL, UPGRADE, "upgrade"
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:Brew) : Action =
+method action(f:Brew, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select REMOVE, "remove"
@@ -146,7 +146,7 @@ method action(argv: var seq[string], f:Brew) : Action =
   select UPGRADEALL, UPGRADE, "upgrade"
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:Choco) : Action =
+method action(f:Choco, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select REMOVE, "uninstall"
@@ -156,7 +156,7 @@ method action(argv: var seq[string], f:Choco) : Action =
   select UPGRADE, "upgrade"
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:DNF) : Action =
+method action(f:DNF, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select REMOVE, "remove"
@@ -168,7 +168,7 @@ method action(argv: var seq[string], f:DNF) : Action =
   select FILES, @["-l", "--list"], @["-q", "--query"]
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:Emerge) : Action =
+method action(f:Emerge, argv: var seq[string]) : Action =
   select INFO, s= @["-S", "--searchdesc"]
   select REMOVE, s= @["-C", "--unmerge"]
   select UPGRADEALL, "-u", "world"
@@ -177,7 +177,7 @@ method action(argv: var seq[string], f:Emerge) : Action =
   select FILES, "files"
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:Pacman) : Action =
+method action(f:Pacman, argv: var seq[string]) : Action =
   select UPGRADEALL, @["-S", "--sync"], @["-y", "--refresh"], @["-u", "--sysupgrade"]
   select UPDATE, @["-S", "--sync"], @["-y", "--refresh"]
   select SEARCH, @["-Q", "--query"], @["-s", "--search"]
@@ -191,7 +191,7 @@ method action(argv: var seq[string], f:Pacman) : Action =
   select ORPHAN, s= @["-Q", "--query"], @["-t", "--unrequired"], @["-d", "--deps"]
   return PASSTHROUGH
 
-method action(argv: var seq[string], f:Zypper) : Action =
+method action(f:Zypper, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select REMOVE, "remove"

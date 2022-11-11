@@ -9,7 +9,7 @@ if (args.contains("--help") or args.contains("-h")):
 let face = args.face
 let target = args.target
 
-case args.action face:
+case face.action(args):
   of INFO:target.info(args)
   of INSTALL:target.install(args)
   of FILES:target.files(args)
@@ -23,5 +23,5 @@ case args.action face:
   of UPGRADEALL:target.upgradeall(args)
   of PASSTHROUGH:target.passthrough(args)
   else: 
-    if not target_was_saved:
+    if not targetWasSaved:
       quit "Invalid command"

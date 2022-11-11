@@ -29,14 +29,14 @@ proc exec(preArg:string, postArg:string,  iargs:seq[string]): int =
   var a = preArg
   var margs = iargs.toSeq
   if postArg != "":
-    margs.insert(postArg, first_option)
+    margs.insert(postArg, firstOption)
   for i in 0..<margs.len :
     a.add " "
     a.add quoteShell(margs[i])
   result = execShellCmd(a)  
 
 template `..>`(exec:string, target:untyped): untyped =
-  if exec.existsFile(): return target()
+  if exec.fileExists: return target()
 
 proc target*(argv: var seq[string]) : Target =
   "choco" => Choco
