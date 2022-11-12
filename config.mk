@@ -12,3 +12,5 @@ EXECNAME=dpr
 RUNARGS=--dpr-help
 
 #COMPRESS=true
+
+#STATIC=false
