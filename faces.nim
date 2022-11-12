@@ -100,7 +100,7 @@ template select(empty:Action, nonEmpty:Action, m:varargs[string]) =
     return if argv.len == 0 : empty  else : nonEmpty
 
 proc face*(argv: var seq[string]) : Face =
-  "DPR" => Dpr
+  "Dpr" => Dpr
   "Apt" => Apt
   "Brew" => Brew
   "Choco" => Choco
@@ -113,7 +113,7 @@ proc face*(argv: var seq[string]) : Face =
 
 method action*(f:Face, argv: var seq[string]) : Action {.base, locks: "unknown".} = INVALID
 
-method action(f:DPR, argv: var seq[string]) : Action =
+method action(f:Dpr, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select LIST, FILES, "list"

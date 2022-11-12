@@ -1,4 +1,4 @@
-import dpropts, faces, sequtils
+import dpropts, faces, sequtils, strutils, osproc
 import posix, os
 
 let root = when system.hostOS == "windows": true else: getuid() == 0
@@ -14,8 +14,10 @@ type
   Yay = ref object of Pacman
   Pikaur = ref object of Pacman
   Yaourt = ref object of Pacman
+  Opkg = ref object of Target
+  Apk = ref object of Target
 
-template `=>`(name: string, target:untyped) =
+template `:>`(name: string, target:untyped) =
   if argv.hasArg("--" & name):
     return target()
 
@@ -39,15 +41,17 @@ template `..>`(exec:string, target:untyped): untyped =
   if exec.fileExists: return target()
 
 proc target*(argv: var seq[string]) : Target =
-  "choco" => Choco
-  "brew" => Brew
-  "apt" => Apt
-  "dnf" => DNF
-  "paru" => Paru
-  "yay" => Yay
-  "yaourt" => Yaourt
-  "pikaur" => Pikaur
-  "pacman" => Pacman
+  "choco" :> Choco
+  "brew" :> Brew
+  "apt" :> Apt
+  "dnf" :> DNF
+  "paru" :> Paru
+  "yay" :> Yay
+  "yaourt" :> Yaourt
+  "pikaur" :> Pikaur
+  "pacman" :> Pacman
+  "opkg" :> Opkg
+  "apk" :> Apk
   when system.hostOS == "windows":
     if true: return Choco()
   elif system.hostOS == "macosx":
@@ -60,6 +64,8 @@ proc target*(argv: var seq[string]) : Target =
     "/usr/bin/yay" ..> Yay
     "/usr/bin/yaourt" ..> Yaourt
     "/usr/bin/pacman" ..> Pacman
+    "/bin/opkg" ..> Opkg
+    "/sbin/apk" ..> Apk
   quit targetArgHelp
 
 method info*(this:Target, args:seq[string]): void {.base.} = return
@@ -183,3 +189,33 @@ def(Yaourt, install, "yaourt", "-S")
 def(Yaourt, search, "yaourt", "-Ss")
 def(Yaourt, upgradeAll, "yaourt", "-Sua")
 def(Yaourt, passthrough, "yaourt", "")
+
+def(Opkg, info, "opkg", "info")
+def(Opkg, install, "opkg", "install")
+def(Opkg, files, "opkg", "files")
+def(Opkg, list, "opkg", "list-installed")
+def(Opkg, remove, "opkg", "remove")
+def(Opkg, search, "opkg", "find")
+def(Opkg, where, "opkg", "search")
+def(Opkg, update, "opkg", "update")
+def(Opkg, upgrade, "opkg", "upgrade")
+ns(Opkg, orphan)
+method upgradeAll(this:Opkg, args:seq[string]): void =
+  let packages = execCmdEx("opkg list-upgradable").output.splitLines.map( proc (it:string): string = 
+    let slash = it.find(" - ")
+    if slash < 0: return ""
+    return " " & it.substr(0, slash-1).strip
+  ).join(" ")
+  discard exec("opkg upgrade " & packages, "", args)
+def(Opkg, passthrough, "opkg", "")
+
+def(Apk, info, "apk", "info")
+def(Apk, install, "apk", "add")
+def(Apk, files, "apk -L", "info")
+def(Apk, list, "apk", "info")
+def(Apk, remove, "apk", "del")
+def(Apk, search, "apk", "search")
+def(Apk, where, "apk info", "--who-owns")
+def(Apk, update, "apk", "update")
+def(Apk, upgrade, "apk", "upgrade")
+def(Opkg, passthrough, "apk", "")
