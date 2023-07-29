@@ -1,4 +1,4 @@
-.PHONY: clean all desktop posix osx linux linux32 linux64 arm arm32 arm64 windows win32 win64 local install install-only run docker help
+.PHONY: clean all desktop posix mac macintel macarm linux linux32 linux64 arm arm32 arm64 windows win32 win64 local install install-only run docker help
 
 
 # needs to be defined before include
@@ -58,11 +58,11 @@ ifneq ($(NIMBLE),)
 NIMBLE:=nimble refresh ; nimble -y install $(NIMBLE);
 DOCKERNAME:=teras/nimcross:${NAME}
 DOCKERNAME32:=teras/nimcross32:${NAME}
-DOCKERNAMEOSX:=teras/nimcrossosx:${NAME}
+DOCKERNAMEMAC:=teras/nimcrossmac:${NAME}
 else
 DOCKERNAME:=teras/nimcross
 DOCKERNAME32:=teras/nimcross32
-DOCKERNAMEOSX:=teras/nimcrossosx
+DOCKERNAMEMAC:=teras/nimcrossmac
 endif
 
 ifneq ($(NIMVER),)
@@ -87,9 +87,9 @@ local:target/${EXECNAME}	## Create a binary based on locally installed nim compi
 
 all:$(ALLTARGETS)	## Target all platforms. The actual platforms are stored in configuration variable $ALLTARGETS
 
-desktop:osx linux windows	## Create only desktop platforms. These are macOS, Linux and Windows
+desktop:mac linux windows	## Create only desktop platforms. These are macOS, Linux and Windows
 
-posix:osx linux arm 	## Create only POSIX-compatible platforms. These are macOS, Linux and Linux on ARM
+posix:mac linux arm 	## Create only POSIX-compatible platforms. These are macOS, Linux and Linux on ARM
 
 arm:arm32 arm64 	## Create only ARM-related targets. These are Linux ARM 32 and Linux ARM 64
 
@@ -97,7 +97,11 @@ arm64:target/${EXECNAME}.aarch64.linux	## Create only Linux ARM 32 target
 
 arm32:target/${EXECNAME}.arm.linux	## Create only Linux ARM 64 target
 
-osx:target/${EXECNAME}.osx	## Create only macOS target
+mac:macintel macarm		## Create only macOS targets. These are macOS ARM 64 and Intel 64
+
+macintel:target/${EXECNAME}.macintel	## Create only macOS Intel 64 target
+
+macarm:target/${EXECNAME}.macarm	## Create only macOS ARM 64 target
 
 linux:linux64	## Create only Linux Intel target. Currently only 64 bit is produced
 
@@ -150,9 +154,9 @@ podman:	 ## If required, create specific podman containers to aid compiling this
         cd podman.tmp ; podman build -t ${DOCKERNAME32} --no-cache . && cd .. &&\
         rm -rf podman.tmp ; \
         mkdir podman.tmp && \
-        echo >podman.tmp/Dockerfile "FROM teras/nimcrossosx" && \
+        echo >podman.tmp/Dockerfile "FROM teras/nimcrossmac" && \
         echo >>podman.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd podman.tmp ; podman build -t ${DOCKERNAMEOSX} --no-cache . && cd ..&&\
+        cd podman.tmp ; podman build -t ${DOCKERNAMEMAC} --no-cache . && cd ..&&\
         rm -rf podman.tmp ; \
 	fi
 
@@ -170,18 +174,26 @@ docker:	 ## If required, create specific docker containers to aid compiling this
         cd docker.tmp ; docker build -t ${DOCKERNAME32} --no-cache . && cd .. &&\
         rm -rf docker.tmp ; \
         mkdir docker.tmp && \
-        echo >docker.tmp/Dockerfile "FROM teras/nimcrossosx" && \
+        echo >docker.tmp/Dockerfile "FROM teras/nimcrossmac" && \
         echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd docker.tmp ; docker build -t ${DOCKERNAMEOSX} --no-cache . && cd ..&&\
+        cd docker.tmp ; docker build -t ${DOCKERNAMEMAC} --no-cache . && cd ..&&\
         rm -rf docker.tmp ; \
 	fi
 
-target/${EXECNAME}.osx:${BUILDDEP}
+target/${EXECNAME}.macintel:${BUILDDEP}
 	mkdir -p target
 	@echo "** WARNING ** static binaries & libraries not supported  for macOS platform"
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAMEOSX} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${OSXNIMOPTS} --os:macosx --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin19-strip ${NAME}"
-	mv ${NAME} target/${EXECNAME}.osx
-	# if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.osx ; fi # UPX is broken under OSX right now
+	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAMEMAC} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${MACNIMOPTS} --os:macosx --cpu:amd64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin22.2-strip ${NAME}"
+	mv ${NAME} target/${EXECNAME}.macintel
+	# if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.macintel ; fi # UPX is broken under macOS right now
+
+target/${EXECNAME}.macarm:${BUILDDEP}
+	mkdir -p target
+	@echo "** WARNING ** static binaries & libraries not supported  for macOS platform"
+	# Stripping is also broken
+	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${DOCKERNAMEMAC} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${MACNIMOPTS} --os:macosx --cpu:arm64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME}"
+	mv ${NAME} target/${EXECNAME}.macarm
+	# if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.macarm ; fi # UPX is broken under macOS right now
 
 target/${EXECNAME}:${BUILDDEP}
 	mkdir -p target
@@ -261,8 +273,9 @@ install: | all install-only		## Create and install binaries to default location
 
 install-only:	## Only install binaries, without rebuilding them
 	set -e ; mkdir -p ${DEST}/all
-	set -e ; rm -rf ${DEST}/all/${EXECNAME}.* ; rm -f ${DEST}/darwin-x86_64/${EXECNAME} ${DEST}/linux-x86_64/${EXECNAME} ${DEST}/linux-i386/${EXECNAME} ${DEST}/linux-arm/${EXECNAME} ${DEST}/linux-aarch64/${EXECNAME} ${DEST}/windows-x86_64/${EXECNAME}.exe ${DEST}/windows-i686/${EXECNAME}.exe ${DEST}/windows-x86_64/${EXECNAME}.dll ${DEST}/windows-i686/${EXECNAME}.dll
-	set -e ; if [ -f target/${EXECNAME}.osx           ] ; then mkdir -p ${DEST}/darwin-x86_64  && cp target/${EXECNAME}.osx           ${DEST}/all/ && ln -s ../all/${EXECNAME}.osx           ${DEST}/darwin-x86_64/${EXECNAME}      ; fi
+	set -e ; rm -rf ${DEST}/all/${EXECNAME}.* ; rm -f ${DEST}/darwin-arm64/${EXECNAME} ${DEST}/darwin-x86_64/${EXECNAME} ${DEST}/linux-x86_64/${EXECNAME} ${DEST}/linux-i386/${EXECNAME} ${DEST}/linux-arm/${EXECNAME} ${DEST}/linux-aarch64/${EXECNAME} ${DEST}/windows-x86_64/${EXECNAME}.exe ${DEST}/windows-i686/${EXECNAME}.exe ${DEST}/windows-x86_64/${EXECNAME}.dll ${DEST}/windows-i686/${EXECNAME}.dll
+	set -e ; if [ -f target/${EXECNAME}.macarm        ] ; then mkdir -p ${DEST}/darwin-arm64   && cp target/${EXECNAME}.macarm        ${DEST}/all/ && ln -s ../all/${EXECNAME}.macarm        ${DEST}/darwin-arm64/${EXECNAME}       ; fi
+	set -e ; if [ -f target/${EXECNAME}.macintel      ] ; then mkdir -p ${DEST}/darwin-x86_64  && cp target/${EXECNAME}.macintel      ${DEST}/all/ && ln -s ../all/${EXECNAME}.macintel      ${DEST}/darwin-x86_64/${EXECNAME}      ; fi
 	set -e ; if [ -f target/${EXECNAME}.linux         ] ; then mkdir -p ${DEST}/linux-x86_64   && cp target/${EXECNAME}.linux         ${DEST}/all/ && ln -s ../all/${EXECNAME}.linux         ${DEST}/linux-x86_64/${EXECNAME}       ; fi
 	set -e ; if [ -f target/${EXECNAME}.linux32       ] ; then mkdir -p ${DEST}/linux-i386     && cp target/${EXECNAME}.linux32       ${DEST}/all/ && ln -s ../all/${EXECNAME}.linux32       ${DEST}/linux-i386/${EXECNAME}         ; fi
 	set -e ; if [ -f target/${EXECNAME}.arm.linux     ] ; then mkdir -p ${DEST}/linux-arm      && cp target/${EXECNAME}.arm.linux     ${DEST}/all/ && ln -s ../all/${EXECNAME}.arm.linux     ${DEST}/linux-arm/${EXECNAME}          ; fi

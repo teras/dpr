@@ -56,6 +56,8 @@ proc target*(argv: var seq[string]) : Target =
     if true: return Choco()
   elif system.hostOS == "macosx":
     "/usr/local/Homebrew/bin/brew" ..> Brew
+    "/usr/local/bin/brew" ..> Brew
+    "/opt/homebrew/bin/brew" ..> Brew
   elif system.hostOS == "linux":
     "/usr/bin/apt" ..> Apt
     "/usr/bin/dnf" ..> DNF
