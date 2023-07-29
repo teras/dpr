@@ -28,10 +28,13 @@ const facesList* = """  --apt-face
   --pacman-face
   --zypper-face"""
 
-const targetsList* = """  --apt
+const targetsList* = """  --apk
+  --apt
   --brew
   --choco
   --dnf
+  --opkg
+  --paru
   --pikaur
   --pacman
   --yaourt

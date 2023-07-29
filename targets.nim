@@ -59,8 +59,8 @@ proc target*(argv: var seq[string]) : Target =
   elif system.hostOS == "linux":
     "/usr/bin/apt" ..> Apt
     "/usr/bin/dnf" ..> DNF
-    "/usr/bin/pikaur" ..> Pikaur
     "/usr/bin/paru" ..> Paru
+    "/usr/bin/pikaur" ..> Pikaur
     "/usr/bin/yay" ..> Yay
     "/usr/bin/yaourt" ..> Yaourt
     "/usr/bin/pacman" ..> Pacman
@@ -156,24 +156,17 @@ def(Yay, files, "yay", "-Ql")
 def(Yay, list, "yay", "-Q")
 def(Yay, remove, "yay", "-R")
 def(Yay, search, "yay", "-Ss")
-def(Yay, where, "pkgfile", "")
-def(Yay, update, "yay", "-Sy")
-def(Yay, upgrade, "yay", "-S")
-def(Yay, upgradeAll, "yay", "-Syu")
-def(Yay, orphan, "pacman", "-Qqtd")
-def(Yay, passthrough, "yay", "")
-
-def(Yay, search, "yay", "-Ss")
 def(Yay, update, "yay", "-Sy")
 def(Yay, upgrade, "yay", "-S")
 def(Yay, upgradeAll, "yay", "-Syu")
 def(Yay, passthrough, "yay", "")
-
 
 def(Paru, search, "paru", "-Ss")
 def(Paru, update, "paru", "-Sy")
 def(Paru, upgrade, "paru", "-S")
 def(Paru, upgradeAll, "paru", "-Syu")
+def(Paru, info, "paru", "-Si")
+def(Paru, install, "paru   --noconfirm", "-S")
 def(Paru, passthrough, "paru", "")
 
 def(Pikaur, search, "pikaur", "-Ss")
