@@ -99,7 +99,7 @@ def(Apt, passthrough, sudo() & "apt-get", "")
 
 def(Brew, info, "brew", "info")
 def(Brew, install, "brew", "install")
-def(Brew, files, "brew", "list")
+def(Brew, files, "brew -v", "list")
 def(Brew, list, "brew", "list")
 def(Brew, remove, "brew", "uninstall")
 def(Brew, search, "brew", "search")
