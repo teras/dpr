@@ -13,7 +13,7 @@ type
   Paru = ref object of Pacman
   Yay = ref object of Pacman
   Pikaur = ref object of Pacman
-  Yaourt = ref object of Pacman
+  Pakku = ref object of Pacman
   Opkg = ref object of Target
   Apk = ref object of Target
 
@@ -47,7 +47,7 @@ proc target*(argv: var seq[string]) : Target =
   "dnf" :> DNF
   "paru" :> Paru
   "yay" :> Yay
-  "yaourt" :> Yaourt
+  "pakku" :> Pakku
   "pikaur" :> Pikaur
   "pacman" :> Pacman
   "opkg" :> Opkg
@@ -62,9 +62,9 @@ proc target*(argv: var seq[string]) : Target =
     "/usr/bin/apt" ..> Apt
     "/usr/bin/dnf" ..> DNF
     "/usr/bin/paru" ..> Paru
-    "/usr/bin/pikaur" ..> Pikaur
     "/usr/bin/yay" ..> Yay
-    "/usr/bin/yaourt" ..> Yaourt
+    "/usr/bin/pakku" ..> Pakku
+    "/usr/bin/pikaur" ..> Pikaur
     "/usr/bin/pacman" ..> Pacman
     "/bin/opkg" ..> Opkg
     "/sbin/apk" ..> Apk
@@ -94,7 +94,7 @@ def(Apt, search, "apt-cache", "search")
 def(Apt, where, "apt-file", "search")
 def(Apt, update, sudo() & "apt-get", "update")
 def(Apt, upgrade, sudo() & "apt-get", "upgrade")
-def(Apt, upgradeall, sudo() & "apt-get", "upgrade")
+def(Apt, upgradeall, sudo() & "apt-get", "dist-upgrade")
 def(Apt, passthrough, sudo() & "apt-get", "")
 
 def(Brew, info, "brew", "info")
@@ -179,11 +179,11 @@ def(Pikaur, info, "pikaur", "-Si")
 def(Pikaur, install, "pikaur --noedit", "-S")
 def(Pikaur, passthrough, "pikaur", "")
 
-def(Yaourt, info, "yaourt", "-Si")
-def(Yaourt, install, "yaourt", "-S")
-def(Yaourt, search, "yaourt", "-Ss")
-def(Yaourt, upgradeAll, "yaourt", "-Sua")
-def(Yaourt, passthrough, "yaourt", "")
+def(Pakku, info, "pakku", "-Si")
+def(Pakku, install, "pakku", "-S")
+def(Pakku, search, "pakku", "-Ss")
+def(Pakku, upgradeAll, "pakku", "-Sua")
+def(Pakku, passthrough, "pakku", "")
 
 def(Opkg, info, "opkg", "info")
 def(Opkg, install, "opkg", "install")

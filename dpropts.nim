@@ -29,16 +29,17 @@ const facesList* = """  --apt-face
   --zypper-face"""
 
 const targetsList* = """  --apk
-  --apt
   --brew
   --choco
+  --apt
   --dnf
-  --opkg
   --paru
+  --yay
+  --pakku
   --pikaur
   --pacman
-  --yaourt
-  --yay"""
+  --opkg
+  --apk"""
 
 const targetArgHelp* = """Please select one of the desired targets:
 """ & targetsList
