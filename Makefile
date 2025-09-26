@@ -45,6 +45,18 @@ endif
 ifeq ($(COMPILER),)
 COMPILER:=c
 endif
+ifeq ($(COMPILERMAC),)
+COMPILERMAC:=$(COMPILER)
+endif
+ifeq ($(COMPILERLINUX),)
+COMPILERLINUX:=$(COMPILER)
+endif
+ifeq ($(COMPILERWIN),)
+COMPILERWIN:=$(COMPILER)
+endif
+ifeq ($(COMPILERSPI),)
+COMPILERSPI:=$(COMPILERLINUX)
+endif
 
 ifeq ($(WINAPP),)
 WINAPP:=console
@@ -52,6 +64,10 @@ endif
 
 ifeq ($(ALLTARGETS),)
 ALLTARGETS:=desktop arm linux32
+endif
+
+ifeq ($(DOCKER),)
+DOCKER:=docker
 endif
 
 ifneq ($(NIMBLE),)
@@ -83,8 +99,8 @@ endif
 
 BUILDDEP:=$(wildcard *.nim *.c *.m Makefile config.mk)
 
-initlocal:
-	${NIMVER} ${NIMBLE}
+localinit:	## Initialize local nimble environment
+	$(NIMVER) ${NIMBLE}
 
 local:target/${EXECNAME}	## Create a binary based on locally installed nim compilers
 
@@ -121,7 +137,7 @@ win64:target/${EXECNAME}.64.${TARGETEXT}	 ## Create Windows 32 bit target
 js:target/${EXECNAME}.js  ## Create JavaScript target
 
 clean:	## Clean up project files
-	rm -rf target docker.tmp podman.tmp nimcache ${CLEAN}
+	rm -rf target docker.tmp nimcache ${CLEAN}
 
 help:	## Show this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' Makefile | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -132,159 +148,151 @@ helpconfig:	## Show config.mk options
 	@echo 'Recommended:'
 	@echo '    VERSION     The application version'
 	@echo 'Optional:'
-	@echo '    ALLTARGETS  The actual targets that will be built when the "all" target is selected, defaults to [desktop, arm]'
-	@echo '    COMPILER    The nim compiler to use, "c" by default'
-	@echo '    COMPRESS    If the final application should be compressed by upx or not, boolean value, false by default'
-	@echo '    DEBUG       Use debug build, have release build by default. Valid values: [release, debug, full, unsafe]'
-	@echo '    EXECNAME    The executable name, $$NAME by default'
-	@echo '    NIMBLE      A list of extra nimble packed needed. If required, then podman/docker target should be called in advance'
-	@echo '    NIMOPTS     Extra nim compiler options'
-	@echo '    OPTIMIZE    The level of optimization. Default is none. Valid values: [none, speed, size]'
-	@echo '    RUNARGS     The run arguments when "run" make target is used'
-	@echo '    SRCONTX     When creating a source container, this is a space separated list of extra files/folders to put inside the container'
-	@echo '    TYPE        The type of the application, defaults to dynamically linked file. Valid values: [dynamic, static, library]'
-	@echo '    WINAPP      Type of windows application, valid values [gui,console], "console" by default'
+	@echo '    ALLTARGETS The actual targets that will be built when the "all" target is selected, defaults to [desktop, arm]'
+	@echo '    COMPILER*  The nim compiler to use. * could be empty (all platforms), LINUX (Linux), WIN (Windows), MAC (macOS), PI (Raspberry Pi). Defaults to "c"'
+	@echo '    COMPRESS   If the final application should be compressed by upx or not, boolean value, false by default'
+	@echo '    DOCKER     The docker command to use, "docker" by default. If you want to use podman, then set it to "podman"'
+	@echo '    DEBUG      Use debug build, have release build by default. Valid values: [release, debug, full, unsafe]'
+	@echo '    EXECNAME   The executable name, $$NAME by default'
+	@echo '    HELP*	  The help message to show when "make help" is called. * could only be LINUX (Linux), MAC (macOS), WIN (Windows), PI (Raspberry Pi). Defaults to empty'
+	@echo '    NIMBLE     A list of extra nimble packed needed. If required, then podman/docker target should be called in advance'
+	@echo '    NIMOPTS*   Extra nim compiler options. * could be empty (all platforms), LINUX (Linux), WIN (Windows), MAC (macOS), PI (Raspberry Pi)'
+	@echo '    OPTIMIZE   The level of optimization. Default is none. Valid values: [none, speed, size]'
+	@echo '    RUNARGS    The run arguments when "run" make target is used'
+	@echo '    SRCONTX    When creating a source container, this is a space separated list of extra files/folders to put inside the container'
+	@echo '    TYPE       The type of the application, defaults to dynamically linked file. Valid values: [dynamic, static, library]'
+	@echo '    WINAPP     Type of windows application, valid values [gui,console], "console" by default'
 
-podman:	 ## If required, create specific podman containers to aid compiling this project
-	@if [ "${NIMBLE}" != "" ] ; then \
-		rm -rf podman.tmp && \
-		mkdir podman.tmp && \
-		echo >podman.tmp/Dockerfile "FROM teras/nimcross" && \
-		echo >>podman.tmp/Dockerfile "RUN ${NIMBLE}" && \
-		cd podman.tmp ; podman build -t ${CONTAINER} --no-cache . && cd .. &&\
-		rm -rf podman.tmp ; \
-        mkdir podman.tmp && \
-        echo >podman.tmp/Dockerfile "FROM teras/nimcross32" && \
-        echo >>podman.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd podman.tmp ; podman build -t ${CONTAINER32} --no-cache . && cd .. &&\
-        rm -rf podman.tmp ; \
-        mkdir podman.tmp && \
-        echo >podman.tmp/Dockerfile "FROM teras/nimcrossmac" && \
-        echo >>podman.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd podman.tmp ; podman build -t ${CONTAINERMAC} --no-cache . && cd ..&&\
-        rm -rf podman.tmp ; \
-	fi
-
-docker:	 ## If required, create specific docker containers to aid compiling this project
+docker:	 ## If required, create specific docker/podman containers to aid compiling this project. Note the DOCKER property in config.mk
 	@if [ "${NIMBLE}" != "" ] ; then \
 		rm -rf docker.tmp && \
 		mkdir docker.tmp && \
 		echo >docker.tmp/Dockerfile "FROM teras/nimcross" && \
 		echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
-		cd docker.tmp ; docker build -t ${CONTAINER} --no-cache . && cd .. &&\
+		cd docker.tmp ; $(DOCKER) build -t ${CONTAINER} --no-cache . && cd .. &&\
 		rm -rf docker.tmp ; \
         mkdir docker.tmp && \
         echo >docker.tmp/Dockerfile "FROM teras/nimcross32" && \
         echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd docker.tmp ; docker build -t ${CONTAINER32} --no-cache . && cd .. &&\
+        cd docker.tmp ; $(DOCKER) build -t ${CONTAINER32} --no-cache . && cd .. &&\
         rm -rf docker.tmp ; \
         mkdir docker.tmp && \
         echo >docker.tmp/Dockerfile "FROM teras/nimcrossmac" && \
         echo >>docker.tmp/Dockerfile "RUN ${NIMBLE}" && \
-        cd docker.tmp ; docker build -t ${CONTAINERMAC} --no-cache . && cd ..&&\
+        cd docker.tmp ; $(DOCKER) build -t ${CONTAINERMAC} --no-cache . && cd ..&&\
         rm -rf docker.tmp ; \
 	fi
 
 srccontainer:${BUILDDEP} ## Create source containers (with this project source files)
-	echo -e "ARG BASE_IMAGE\nFROM \$$BASE_IMAGE \nCOPY ${SRCCONTFILES} *.nim /root" >${TEMPCONT}
-	for entry in ${SRCCONTDIRS}; do echo COPY $$entry /root/$$entry >>${TEMPCONT}; done
-	podman build -t ${CONTAINER}-src -f ${TEMPCONT} --build-arg BASE_IMAGE=${CONTAINER}
-	podman build -t ${CONTAINER32}-src -f ${TEMPCONT} --build-arg BASE_IMAGE=${CONTAINER32}
-	podman build -t ${CONTAINERMAC}-src -f ${TEMPCONT} --build-arg BASE_IMAGE=${CONTAINERMAC}
-	rm ${TEMPCONT}
+	echo HELLO: $(SRCCONTDIRS)
+	echo -e "ARG BASE_IMAGE\nFROM \$$BASE_IMAGE \nCOPY ${SRCCONTFILES} *.nim /root/" >$(TEMPCONT)
+	for entry in ${SRCCONTDIRS}; do echo COPY $$entry /root/$$entry/ >>$(TEMPCONT); done
+	$(DOCKER) build -t ${CONTAINER}-src -f $(TEMPCONT) --build-arg BASE_IMAGE=${CONTAINER} .
+	$(DOCKER) build -t ${CONTAINER32}-src -f $(TEMPCONT) --build-arg BASE_IMAGE=${CONTAINER32} .
+	$(DOCKER) build -t ${CONTAINERMAC}-src -f $(TEMPCONT) --build-arg BASE_IMAGE=${CONTAINERMAC} .
+	rm $(TEMPCONT)
 
 srcpush:srccontainer	## Create and push source containers.
-	podman push ${CONTAINER}-src
-	podman push ${CONTAINER32}-src
-	podman push ${CONTAINERMAC}-src
+	$(DOCKER) push ${CONTAINER}-src
+	$(DOCKER) push ${CONTAINER32}-src
+	$(DOCKER) push ${CONTAINERMAC}-src
 
 target/${EXECNAME}.macintel:${BUILDDEP}
-	mkdir -p target
+	@printf "$(HELPMAC)"
 	@echo "** WARNING ** static binaries & libraries not supported  for macOS platform"
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${MACNIMOPTS} --os:macosx --cpu:amd64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin22.2-strip ${NAME}"
+	mkdir -p target
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "$(NIMVER) nim $(COMPILERMAC) $(BASENIMOPTS) ${NIMOPTSMAC} --os:macosx --cpu:amd64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin22.2-strip ${NAME}"
 	mv ${NAME} target/${EXECNAME}.macintel
 	# if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.macintel ; fi # UPX is broken under macOS right now
 
 target/${EXECNAME}.macarm:${BUILDDEP}
-	mkdir -p target
+	@printf "$(HELPMAC)"
 	@echo "** WARNING ** static binaries & libraries not supported  for macOS platform"
+	mkdir -p target
 	# Stripping is also broken
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${MACNIMOPTS} --os:macosx --cpu:arm64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "$(NIMVER) nim $(COMPILERMAC) $(BASENIMOPTS) ${NIMOPTSMAC} --os:macosx --cpu:arm64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME}"
 	mv ${NAME} target/${EXECNAME}.macarm
-	# if [ "$(DOCOMPRESS)" = "t" ] ; then podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} /usr/local/bin/upx --best ${EXECNAME} ; fi
+	# if [ "$(DOCOMPRESS)" = "t" ] ; then $(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} /usr/local/bin/upx --best ${EXECNAME} ; fi
 
 target/${EXECNAME}.mac:target/${EXECNAME}.macintel target/${EXECNAME}.macarm
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "lipo -create target/${NAME}.macarm target/${NAME}.macintel -output target/${NAME}.mac "
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "lipo -create target/${NAME}.macarm target/${NAME}.macintel -output target/${NAME}.mac "
 
 target/${EXECNAME}:${BUILDDEP}
+	@printf "$(HELPLINUX)"
 	mkdir -p target
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	${NIMVER} ${LOCALNIM} ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -d:lto --outdir:./target ${NAME}
+	$(NIMVER) ${LOCALNIM} $(COMPILERLINUX) $(BASENIMOPTS) $(NIMOPTSLINUX) ${EXTRA} ${TYPEPARAM} -d:lto --outdir:./target ${NAME}
 
 target/${EXECNAME}.linux:${BUILDDEP}
+	@printf "$(HELPLINUX)"
 	mkdir -p target
 	$(eval CPREF:=/cross/x86_64-linux-musl-cross/bin/x86_64-linux-musl-)
-	$(eval EXTRA:=$(LINUXNIMOPTS) -d:lto)
+	$(eval EXTRA:=$(NIMOPTSLINUX) -d:lto)
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).linux.so), $(eval OUT=$(NAME).linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERLINUX) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best ./target/${OUT} ; fi
 
 target/${EXECNAME}.linux32:${BUILDDEP}
+	@printf "$(HELPLINUX)"
 	mkdir -p target
 	$(eval CPREF:=/cross/i686-linux-musl-cross/bin/i686-linux-musl-)
-	$(eval EXTRA:=$(LINUXNIMOPTS) -d:lto --cpu:i386 --passC:-m32 --passL:-m32 --gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc)
+	$(eval EXTRA:=$(NIMOPTSLINUX) -d:lto --cpu:i386 --passC:-m32 --passL:-m32 --gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc)
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).32.linux), $(eval OUT=$(NAME).32.linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--passL:-static))
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER32} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER32} bash -c "$(NIMVER) nim $(COMPILERLINUX) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.arm.linux:${BUILDDEP}
+	@printf "$(HELPSPI)"
 	mkdir -p target
 	$(eval CPREF:=/cross/armel-linux-musleabihf-cross/bin/armel-linux-musleabihf-)
-	$(eval EXTRA:=$(PINIMOPTS) -d:lto --cpu:arm --os:linux)
+	$(eval EXTRA:=$(NIMOPTSPI) -d:lto --cpu:arm --os:linux)
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).arm.linux.so), $(eval OUT=$(NAME).arm.linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERPI) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.aarch64.linux:${BUILDDEP}
+	@printf "$(HELPSPI)"
 	mkdir -p target
 	$(eval CPREF:=/cross/aarch64-linux-musl-cross/bin/aarch64-linux-musl-)
-	$(eval EXTRA:=$(PINIMOPTS) -d:lto --cpu:arm64 --os:linux)
+	$(eval EXTRA:=$(NIMOPTSPI) -d:lto --cpu:arm64 --os:linux)
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).aarch64.linux.so), $(eval OUT=$(NAME).aarch64.linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERPI) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.32.${TARGETEXT}:${BUILDDEP}
+	@printf "$(HELPWIN)"
 	mkdir -p target
 	$(eval CPREF:=/cross/i686-w64-mingw32-cross/bin/i686-w64-mingw32-)
-	$(eval EXTRA:=$(WINDOWSNIMOPTS) -d:lto -d:mingw --cpu:i386 --app:$(WINAPP))
+	$(eval EXTRA:=$(NIMOPTSWIN) -d:lto -d:mingw --cpu:i386 --app:$(WINAPP))
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=$(NAME).32.dll), $(eval OUT=$(NAME).32.exe))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERWIN) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.64.${TARGETEXT}:${BUILDDEP}
+	@printf "$(HELPWIN)"
 	mkdir -p target
 	$(eval CPREF:=/cross/x86_64-w64-mingw32-cross/bin/x86_64-w64-mingw32-)
-	$(eval EXTRA:=$(WINDOWSNIMOPTS) -d:lto -d:mingw --cpu:amd64 --app:$(WINAPP))
+	$(eval EXTRA:=$(NIMOPTSWIN) -d:lto -d:mingw --cpu:amd64 --app:$(WINAPP))
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=$(NAME).64.dll), $(eval OUT=$(NAME).64.exe))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "${NIMVER} nim ${COMPILER} ${BASENIMOPTS} ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERWIN) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.js:${BUILDDEP}
 	mkdir -p target
-	podman run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "${NIMVER} nim js ${BASENIMOPTS} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim js $(BASENIMOPTS) ${NAME}"
 	mv ${NAME}.js target/${EXECNAME}.js
 	if [ "$(DOCOMPRESS)" = "t" ] ; then uglifyjs target/${EXECNAME}.js >target/${EXECNAME}.min.js ; mv target/${EXECNAME}.min.js target/${EXECNAME}.js ; fi
 	echo > target/index.html "<!DOCTYPE html>"
