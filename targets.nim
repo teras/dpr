@@ -78,7 +78,6 @@ method orphan*(this:Target, args:seq[string]): void {.base.} = return
 method remove*(this:Target, args:seq[string]): void {.base.} = return
 method search*(this:Target, args:seq[string]): void {.base.} = return
 method where*(this:Target, args:seq[string]): void {.base.} = return
-method update*(this:Target, args:seq[string]): void {.base.} = return
 method upgrade*(this:Target, args:seq[string]): void {.base.} = return
 method upgradeall*(this:Target, args:seq[string]): void {.base.} = return
 method passthrough*(this:Target, args:seq[string]): void {.base.} = return
@@ -92,8 +91,9 @@ def(Apt, list, "apt list", "--installed")
 def(Apt, remove, sudo() &  "apt-get", "remove")
 def(Apt, search, "apt-cache", "search")
 def(Apt, where, "apt-file", "search")
-def(Apt, update, sudo() & "apt-get", "update")
-def(Apt, upgrade, sudo() & "apt-get", "upgrade")
+method upgrade(this:Apt, args:seq[string]): void =
+  discard exec(sudo() & "apt-get", "update", @[])
+  discard exec(sudo() & "apt-get", "upgrade", args)
 def(Apt, upgradeall, sudo() & "apt-get", "dist-upgrade")
 def(Apt, passthrough, sudo() & "apt-get", "")
 
@@ -104,7 +104,6 @@ def(Brew, list, "brew", "list")
 def(Brew, remove, "brew", "uninstall")
 def(Brew, search, "brew", "search")
 def(Brew, where, "brew", "search")
-def(Brew, update, "brew", "update")
 def(Brew, upgrade, "brew", "upgrade")
 def(Brew, upgradeAll, "brew", "upgrade")
 def(Brew, passthrough, "brew", "")
@@ -131,7 +130,6 @@ method where(this:DNF, args:seq[string]): void =
   var argsm = args
   if argsm.len>0: argsm[0] = "*/" & argsm[0]
   discard exec("dnf", "provides", argsm)
-def(DNF, update, "dnf", "check-update")
 def(DNF, upgrade, "dnf", "upgrade")
 def(DNF, upgradeAll, "dnf", "upgrade")
 def(DNF, passthrough, "dnf", "")
@@ -143,8 +141,8 @@ def(Pacman, list, "pacman", "-Q")
 def(Pacman, remove, sudo() & "pacman", "-R")
 def(Pacman, search, "pacman", "-Ss")
 def(Pacman, where, "pkgfile", "")
-def(Pacman, update, sudo() & "pacman", "-Sy")
-def(Pacman, upgrade, sudo() & "pacman", "-S")
+method upgrade(this:Pacman, args:seq[string]): void =
+  discard exec(sudo() & "pacman", "-Syu", args)
 def(Pacman, upgradeAll, sudo() & "pacman", "-Syu")
 def(Pacman, orphan, "pacman", "-Qqtd")
 def(Pacman, passthrough, sudo() & "pacman", "")
@@ -158,22 +156,22 @@ def(Yay, files, "yay", "-Ql")
 def(Yay, list, "yay", "-Q")
 def(Yay, remove, "yay", "-R")
 def(Yay, search, "yay", "-Ss")
-def(Yay, update, "yay", "-Sy")
-def(Yay, upgrade, "yay", "-S")
+method upgrade(this:Yay, args:seq[string]): void =
+  discard exec("yay", "-Syu", args)
 def(Yay, upgradeAll, "yay", "-Syu")
 def(Yay, passthrough, "yay", "")
 
 def(Paru, search, "paru", "-Ss")
-def(Paru, update, "paru", "-Sy")
-def(Paru, upgrade, "paru", "-S")
+method upgrade(this:Paru, args:seq[string]): void =
+  discard exec("paru", "-Syu", args)
 def(Paru, upgradeAll, "paru", "-Syu")
 def(Paru, info, "paru", "-Si")
 def(Paru, install, "paru   --noconfirm", "-S")
 def(Paru, passthrough, "paru", "")
 
 def(Pikaur, search, "pikaur", "-Ss")
-def(Pikaur, update, "pikaur", "-Sy")
-def(Pikaur, upgrade, "pikautr --noedit", "-S")
+method upgrade(this:Pikaur, args:seq[string]): void =
+  discard exec("pikaur --noedit --noconfirm", "-Syu", args)
 def(Pikaur, upgradeAll, "pikaur --noedit --noconfirm", "-Syu")
 def(Pikaur, info, "pikaur", "-Si")
 def(Pikaur, install, "pikaur --noedit", "-S")
@@ -182,6 +180,8 @@ def(Pikaur, passthrough, "pikaur", "")
 def(Pakku, info, "pakku", "-Si")
 def(Pakku, install, "pakku", "-S")
 def(Pakku, search, "pakku", "-Ss")
+method upgrade(this:Pakku, args:seq[string]): void =
+  discard exec("pakku", "-Syu", args)
 def(Pakku, upgradeAll, "pakku", "-Sua")
 def(Pakku, passthrough, "pakku", "")
 
@@ -192,8 +192,9 @@ def(Opkg, list, "opkg", "list-installed")
 def(Opkg, remove, "opkg", "remove")
 def(Opkg, search, "opkg", "find")
 def(Opkg, where, "opkg", "search")
-def(Opkg, update, "opkg", "update")
-def(Opkg, upgrade, "opkg", "upgrade")
+method upgrade(this:Opkg, args:seq[string]): void =
+  discard exec("opkg", "update", @[])
+  discard exec("opkg", "upgrade", args)
 ns(Opkg, orphan)
 method upgradeAll(this:Opkg, args:seq[string]): void =
   let packages = execCmdEx("opkg list-upgradable").output.splitLines.map( proc (it:string): string = 
@@ -211,6 +212,5 @@ def(Apk, list, "apk", "info")
 def(Apk, remove, "apk", "del")
 def(Apk, search, "apk", "search")
 def(Apk, where, "apk info", "--who-owns")
-def(Apk, update, "apk", "update")
 def(Apk, upgrade, "apk", "upgrade")
 def(Opkg, passthrough, "apk", "")

@@ -16,7 +16,6 @@ const dprCmd = """  info
   remove|uninstall
   search
   where|file|files
-  update
   upgrade"""
 
 const facesList* = """  --apt-face

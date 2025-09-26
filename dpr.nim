@@ -18,7 +18,6 @@ case face.action(args):
   of REMOVE:target.remove(args)
   of SEARCH:target.search(args)
   of WHERE:target.where(args)
-  of UPDATE:target.update(args)
   of UPGRADE:target.upgrade(args)
   of UPGRADEALL:target.upgradeall(args)
   of PASSTHROUGH:target.passthrough(args)

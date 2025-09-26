@@ -120,7 +120,6 @@ method action(f:Dpr, argv: var seq[string]) : Action =
   select REMOVE, s= @["remove", "uninstall"]
   select SEARCH, "search"
   select WHERE, s= @["where", "file", "files"]
-  select UPDATE, "update"
   select UPGRADEALL, UPGRADE, "upgrade"
   select ORPHAN, "orphan"
   return PASSTHROUGH
@@ -132,7 +131,6 @@ method action(f:Apt, argv: var seq[string]) : Action =
   select FILES, s= @["-L", "--listfiles"]
   select REMOVE, "remove"
   select SEARCH, "search"
-  select UPDATE, "update"
   select UPGRADEALL, UPGRADE, "upgrade"
   return PASSTHROUGH
 
@@ -141,7 +139,6 @@ method action(f:Brew, argv: var seq[string]) : Action =
   select INSTALL, "install"
   select REMOVE, "remove"
   select SEARCH, "search"
-  select UPDATE, "update"
   select LIST, FILES, "list"
   select UPGRADEALL, UPGRADE, "upgrade"
   return PASSTHROUGH
@@ -161,7 +158,6 @@ method action(f:DNF, argv: var seq[string]) : Action =
   select INSTALL, "install"
   select REMOVE, "remove"
   select SEARCH, "search"
-  select UPDATE, "check-update"
   select LIST, "list", "installed"
   select UPGRADEALL, UPGRADE, "upgrade"
   select FILES, @["-q", "--query"], @["-l", "--list"]
@@ -179,7 +175,6 @@ method action(f:Emerge, argv: var seq[string]) : Action =
 
 method action(f:Pacman, argv: var seq[string]) : Action =
   select UPGRADEALL, @["-S", "--sync"], @["-y", "--refresh"], @["-u", "--sysupgrade"]
-  select UPDATE, @["-S", "--sync"], @["-y", "--refresh"]
   select SEARCH, @["-Q", "--query"], @["-s", "--search"]
   select SEARCH, @["-S", "--sync"], @["-s", "--search"]
   select INFO, @["-Q", "--query"], @["-i", "--info"]
@@ -196,6 +191,5 @@ method action(f:Zypper, argv: var seq[string]) : Action =
   select INSTALL, "install"
   select REMOVE, "remove"
   select SEARCH, "search"
-  select UPDATE, "refresh"
   select UPGRADE, "update"
   return PASSTHROUGH
