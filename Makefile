@@ -38,6 +38,12 @@ ifeq ($(EXECNAME),)
 EXECNAME:=$(NAME)
 endif
 
+ifeq ($(SRCDIR),)
+NIMSRC:=${NAME}
+else
+NIMSRC:=${SRCDIR}/${NAME}
+endif
+
 ifeq ($(VERSION),)
 VERSION:=0.1
 endif
@@ -97,7 +103,7 @@ else
 TARGETEXT=exe
 endif
 
-BUILDDEP:=$(wildcard *.nim *.c *.m Makefile config.mk)
+BUILDDEP:=$(wildcard *.nim *.c *.m Makefile config.mk) $(wildcard $(SRCDIR)/*.nim $(SRCDIR)/**/*.nim)
 
 localinit:	## Initialize local nimble environment
 	$(NIMVER) ${NIMBLE}
@@ -126,7 +132,7 @@ linux:linux64	## Create only Linux Intel target. Currently only 64 bit is produc
 
 linux64:target/${EXECNAME}.linux	## Create only Linux Intel (64) target
 
-linux32:target/${EXECNAME}.linux32	## Create only Linux Intel (32) target
+linux32:target/${EXECNAME}.32.linux	## Create only Linux Intel (32) target
 
 windows:win32 win64	 ## Create Windows target, both 32 and 64 bit
 
@@ -185,7 +191,7 @@ docker:	 ## If required, create specific docker/podman containers to aid compili
 
 srccontainer:${BUILDDEP} ## Create source containers (with this project source files)
 	echo HELLO: $(SRCCONTDIRS)
-	echo -e "ARG BASE_IMAGE\nFROM \$$BASE_IMAGE \nCOPY ${SRCCONTFILES} *.nim /root/" >$(TEMPCONT)
+	echo -e "ARG BASE_IMAGE\nFROM \$$BASE_IMAGE \nCOPY ${SRCCONTFILES} *.nim $(SRCDIR)/ /root/" >$(TEMPCONT)
 	for entry in ${SRCCONTDIRS}; do echo COPY $$entry /root/$$entry/ >>$(TEMPCONT); done
 	$(DOCKER) build -t ${CONTAINER}-src -f $(TEMPCONT) --build-arg BASE_IMAGE=${CONTAINER} .
 	$(DOCKER) build -t ${CONTAINER32}-src -f $(TEMPCONT) --build-arg BASE_IMAGE=${CONTAINER32} .
@@ -201,8 +207,8 @@ target/${EXECNAME}.macintel:${BUILDDEP}
 	@printf "$(HELPMAC)"
 	@echo "** WARNING ** static binaries & libraries not supported  for macOS platform"
 	mkdir -p target
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "$(NIMVER) nim $(COMPILERMAC) $(BASENIMOPTS) ${NIMOPTSMAC} --os:macosx --cpu:amd64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME} && x86_64-apple-darwin22.2-strip ${NAME}"
-	mv ${NAME} target/${EXECNAME}.macintel
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "$(NIMVER) nim $(COMPILERMAC) $(BASENIMOPTS) ${NIMOPTSMAC} --os:macosx --cpu:amd64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' -o:./${NAME} ${NIMSRC} && x86_64-apple-darwin22.2-strip ${NAME}"
+	mv -f ${NAME} target/${EXECNAME}.macintel
 	# if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${EXECNAME}.macintel ; fi # UPX is broken under macOS right now
 
 target/${EXECNAME}.macarm:${BUILDDEP}
@@ -210,8 +216,8 @@ target/${EXECNAME}.macarm:${BUILDDEP}
 	@echo "** WARNING ** static binaries & libraries not supported  for macOS platform"
 	mkdir -p target
 	# Stripping is also broken
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "$(NIMVER) nim $(COMPILERMAC) $(BASENIMOPTS) ${NIMOPTSMAC} --os:macosx --cpu:arm64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' ${NAME}"
-	mv ${NAME} target/${EXECNAME}.macarm
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} bash -c "$(NIMVER) nim $(COMPILERMAC) $(BASENIMOPTS) ${NIMOPTSMAC} --os:macosx --cpu:arm64 --passC:'-mmacosx-version-min=10.7 -gfull' --passL:'-mmacosx-version-min=10.7 -dead_strip' -o:./${NAME} ${NIMSRC}"
+	mv -f ${NAME} target/${EXECNAME}.macarm
 	# if [ "$(DOCOMPRESS)" = "t" ] ; then $(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINERMAC} /usr/local/bin/upx --best ${EXECNAME} ; fi
 
 target/${EXECNAME}.mac:target/${EXECNAME}.macintel target/${EXECNAME}.macarm
@@ -222,7 +228,7 @@ target/${EXECNAME}:${BUILDDEP}
 	mkdir -p target
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	$(NIMVER) ${LOCALNIM} $(COMPILERLINUX) $(BASENIMOPTS) $(NIMOPTSLINUX) ${EXTRA} ${TYPEPARAM} -d:lto --outdir:./target ${NAME}
+	$(NIMVER) ${LOCALNIM} $(COMPILERLINUX) $(BASENIMOPTS) $(NIMOPTSLINUX) ${EXTRA} ${TYPEPARAM} -d:lto --outdir:./target ${NIMSRC}
 
 target/${EXECNAME}.linux:${BUILDDEP}
 	@printf "$(HELPLINUX)"
@@ -232,10 +238,10 @@ target/${EXECNAME}.linux:${BUILDDEP}
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).linux.so), $(eval OUT=$(NAME).linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERLINUX) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERLINUX) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NIMSRC}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best ./target/${OUT} ; fi
 
-target/${EXECNAME}.linux32:${BUILDDEP}
+target/${EXECNAME}.32.linux:${BUILDDEP}
 	@printf "$(HELPLINUX)"
 	mkdir -p target
 	$(eval CPREF:=/cross/i686-linux-musl-cross/bin/i686-linux-musl-)
@@ -243,18 +249,18 @@ target/${EXECNAME}.linux32:${BUILDDEP}
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).32.linux), $(eval OUT=$(NAME).32.linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--passL:-static))
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER32} bash -c "$(NIMVER) nim $(COMPILERLINUX) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER32} bash -c "$(NIMVER) nim $(COMPILERLINUX) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NIMSRC}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.arm.linux:${BUILDDEP}
 	@printf "$(HELPSPI)"
 	mkdir -p target
 	$(eval CPREF:=/cross/armel-linux-musleabihf-cross/bin/armel-linux-musleabihf-)
-	$(eval EXTRA:=$(NIMOPTSPI) -d:lto --cpu:arm --os:linux)
+	$(eval EXTRA:=$(NIMOPTSPI) -d:lto --cpu:arm --os:linux --passL:-latomic)
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).arm.linux.so), $(eval OUT=$(NAME).arm.linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERPI) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERPI) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NIMSRC}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.aarch64.linux:${BUILDDEP}
@@ -265,7 +271,7 @@ target/${EXECNAME}.aarch64.linux:${BUILDDEP}
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=lib$(NAME).aarch64.linux.so), $(eval OUT=$(NAME).aarch64.linux))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERPI) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERPI) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NIMSRC}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.32.${TARGETEXT}:${BUILDDEP}
@@ -276,7 +282,7 @@ target/${EXECNAME}.32.${TARGETEXT}:${BUILDDEP}
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=$(NAME).32.dll), $(eval OUT=$(NAME).32.exe))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERWIN) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERWIN) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NIMSRC}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.64.${TARGETEXT}:${BUILDDEP}
@@ -287,13 +293,13 @@ target/${EXECNAME}.64.${TARGETEXT}:${BUILDDEP}
 	$(if $(findstring l,$(TYPEARG)), $(eval OUT=$(NAME).64.dll), $(eval OUT=$(NAME).64.exe))
 	$(if $(findstring l,$(TYPEARG)), $(eval TYPEPARAM=--noMain:on --app:lib))
 	$(if $(findstring s,$(TYPEARG)), $(eval TYPEPARAM=--gcc.exe:$(CPREF)gcc --gcc.linkerexe:$(CPREF)gcc --passL:-static))
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERWIN) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NAME}"
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim $(COMPILERWIN) $(BASENIMOPTS) ${EXTRA} ${TYPEPARAM} -o:./target/${OUT} ${NIMSRC}"
 	if [ "$(DOCOMPRESS)" = "t" ] ; then upx --best target/${OUT} ; fi
 
 target/${EXECNAME}.js:${BUILDDEP}
 	mkdir -p target
-	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim js $(BASENIMOPTS) ${NAME}"
-	mv ${NAME}.js target/${EXECNAME}.js
+	$(DOCKER) run --rm -v `pwd`:/usr/src/app -w /usr/src/app ${CONTAINER} bash -c "$(NIMVER) nim js $(BASENIMOPTS) -o:./${NAME}.js ${NIMSRC}"
+	mv -f ${NAME}.js target/${EXECNAME}.js
 	if [ "$(DOCOMPRESS)" = "t" ] ; then uglifyjs target/${EXECNAME}.js >target/${EXECNAME}.min.js ; mv target/${EXECNAME}.min.js target/${EXECNAME}.js ; fi
 	echo > target/index.html "<!DOCTYPE html>"
 	echo >>target/index.html '<html><head><meta charset="UTF-8"/><link href="styles.css" rel="stylesheet" type="text/css"></head><body id="body" class="site"><div id="ROOT"></div><script type="text/javascript" src="/'${EXECNAME}'.js"></script></body></html>'
@@ -304,7 +310,7 @@ install-only:	## Only install binaries, without rebuilding them
 	set -e ; mkdir -p ${DEST}/all
 	set -e ; rm -rf ${DEST}/all/${EXECNAME}.* ; rm -f ${DEST}/darwin-arm64/${EXECNAME} ${DEST}/darwin-x86_64/${EXECNAME} ${DEST}/darwin/${EXECNAME} ${DEST}/linux-x86_64/${EXECNAME} ${DEST}/linux-i386/${EXECNAME} ${DEST}/linux-arm/${EXECNAME} ${DEST}/linux-aarch64/${EXECNAME} ${DEST}/windows-x86_64/${EXECNAME}.exe ${DEST}/windows-i686/${EXECNAME}.exe ${DEST}/windows-x86_64/${EXECNAME}.dll ${DEST}/windows-i686/${EXECNAME}.dll
 	set -e ; if [ -f target/${EXECNAME}.linux         ] ; then mkdir -p ${DEST}/linux-x86_64   && cp target/${EXECNAME}.linux         ${DEST}/all/ && ln -s ../all/${EXECNAME}.linux         ${DEST}/linux-x86_64/${EXECNAME}       ; fi
-	set -e ; if [ -f target/${EXECNAME}.linux32       ] ; then mkdir -p ${DEST}/linux-i386     && cp target/${EXECNAME}.linux32       ${DEST}/all/ && ln -s ../all/${EXECNAME}.linux32       ${DEST}/linux-i386/${EXECNAME}         ; fi
+	set -e ; if [ -f target/${EXECNAME}.32.linux       ] ; then mkdir -p ${DEST}/linux-i386     && cp target/${EXECNAME}.32.linux       ${DEST}/all/ && ln -s ../all/${EXECNAME}.32.linux       ${DEST}/linux-i386/${EXECNAME}         ; fi
 	set -e ; if [ -f target/${EXECNAME}.arm.linux     ] ; then mkdir -p ${DEST}/linux-arm      && cp target/${EXECNAME}.arm.linux     ${DEST}/all/ && ln -s ../all/${EXECNAME}.arm.linux     ${DEST}/linux-arm/${EXECNAME}          ; fi
 	set -e ; if [ -f target/${EXECNAME}.aarch64.linux ] ; then mkdir -p ${DEST}/linux-aarch64  && cp target/${EXECNAME}.aarch64.linux ${DEST}/all/ && ln -s ../all/${EXECNAME}.aarch64.linux ${DEST}/linux-aarch64/${EXECNAME}      ; fi
 	set -e ; if [ -f target/${EXECNAME}.64.exe        ] ; then mkdir -p ${DEST}/windows-x86_64 && cp target/${EXECNAME}.64.exe        ${DEST}/all/ && ln -s ../all/${EXECNAME}.64.exe        ${DEST}/windows-x86_64/${EXECNAME}.exe ; fi
