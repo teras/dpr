@@ -94,7 +94,9 @@ def(Apt, where, "apt-file", "search")
 method upgrade(this:Apt, args:seq[string]): void =
   discard exec(sudo() & "apt-get", "update", @[])
   discard exec(sudo() & "apt-get", "upgrade", args)
-def(Apt, upgradeall, sudo() & "apt-get", "dist-upgrade")
+method upgradeall(this:Apt, args:seq[string]): void =
+  discard exec(sudo() & "apt-get", "update", @[])
+  discard exec(sudo() & "apt-get", "dist-upgrade", args)
 def(Apt, passthrough, sudo() & "apt-get", "")
 
 def(Brew, info, "brew", "info")
@@ -104,8 +106,12 @@ def(Brew, list, "brew", "list")
 def(Brew, remove, "brew", "uninstall")
 def(Brew, search, "brew", "search")
 def(Brew, where, "brew", "search")
-def(Brew, upgrade, "brew", "upgrade")
-def(Brew, upgradeAll, "brew", "upgrade")
+method upgrade(this:Brew, args:seq[string]): void =
+  discard exec("brew", "update", @[])
+  discard exec("brew", "upgrade", args)
+method upgradeAll(this:Brew, args:seq[string]): void =
+  discard exec("brew", "update", @[])
+  discard exec("brew", "upgrade", args)
 def(Brew, passthrough, "brew", "")
 
 def(Choco, info, "choco", "info")
@@ -182,7 +188,7 @@ def(Pakku, install, "pakku", "-S")
 def(Pakku, search, "pakku", "-Ss")
 method upgrade(this:Pakku, args:seq[string]): void =
   discard exec("pakku", "-Syu", args)
-def(Pakku, upgradeAll, "pakku", "-Sua")
+def(Pakku, upgradeAll, "pakku", "-Syua")
 def(Pakku, passthrough, "pakku", "")
 
 def(Opkg, info, "opkg", "info")
@@ -197,7 +203,8 @@ method upgrade(this:Opkg, args:seq[string]): void =
   discard exec("opkg", "upgrade", args)
 ns(Opkg, orphan)
 method upgradeAll(this:Opkg, args:seq[string]): void =
-  let packages = execCmdEx("opkg list-upgradable").output.splitLines.map( proc (it:string): string = 
+  discard exec("opkg", "update", @[])
+  let packages = execCmdEx("opkg list-upgradable").output.splitLines.map( proc (it:string): string =
     let slash = it.find(" - ")
     if slash < 0: return ""
     return " " & it.substr(0, slash-1).strip
@@ -212,5 +219,7 @@ def(Apk, list, "apk", "info")
 def(Apk, remove, "apk", "del")
 def(Apk, search, "apk", "search")
 def(Apk, where, "apk info", "--who-owns")
-def(Apk, upgrade, "apk", "upgrade")
+method upgrade(this:Apk, args:seq[string]): void =
+  discard exec("apk", "update", @[])
+  discard exec("apk", "upgrade", args)
 def(Opkg, passthrough, "apk", "")
