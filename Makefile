@@ -6,7 +6,7 @@ default:help
 
 include config.mk
 
-DEST:=~/Works/System/bin/arch
+DEST:=~/Works/System/bin
 
 ifeq ($(shell which nim 2>/dev/null),)
 LOCALNIM=~/.nimble/bin/nim
