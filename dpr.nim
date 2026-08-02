@@ -2,6 +2,7 @@ from os import commandLineParams
 import faces,targets, actions, dpropts
 
 var args = commandLineParams()
+assumeYes = args.hasArg("--yes")
 if (args.contains("--help") or args.contains("-h")):
   echo fullHelp
   echo "" ; echo " *** Tools help page ***" ; echo ""
