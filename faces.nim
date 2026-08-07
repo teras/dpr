@@ -116,7 +116,7 @@ method action*(f:Face, argv: var seq[string]) : Action {.base, locks: "unknown".
 method action(f:Dpr, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
-  select LIST, FILES, "list"
+  select LISTALL, LISTPACK, "list"
   select REMOVE, s= @["remove", "uninstall"]
   select SEARCH, "search"
   select WHERE, s= @["where", "file", "files"]
@@ -128,8 +128,8 @@ method action(f:Dpr, argv: var seq[string]) : Action =
 method action(f:Apt, argv: var seq[string]) : Action =
   select INFO, "show"
   select INSTALL, "install"
-  select LIST, "list", "--installed"
-  select FILES, s= @["-L", "--listfiles"]
+  select LISTALL, "list", "--installed"
+  select LISTPACK, s= @["-L", "--listfiles"]
   select REMOVE, "remove"
   select SEARCH, "search"
   select UPGRADEALL, UPGRADE, "upgrade"
@@ -141,7 +141,7 @@ method action(f:Brew, argv: var seq[string]) : Action =
   select INSTALL, "install"
   select REMOVE, "remove"
   select SEARCH, "search"
-  select LIST, FILES, "list"
+  select LISTALL, LISTPACK, "list"
   select UPGRADEALL, UPGRADE, "upgrade"
   select CLEANUP, "autoremove"
   return PASSTHROUGH
@@ -150,7 +150,7 @@ method action(f:Choco, argv: var seq[string]) : Action =
   select INFO, "info"
   select INSTALL, "install"
   select REMOVE, "uninstall"
-  select LIST, "search", "--local-only"
+  select LISTALL, "search", "--local-only"
   select SEARCH, "search"
   select UPGRADEALL, "upgrade", "all"
   select UPGRADE, "upgrade"
@@ -161,11 +161,11 @@ method action(f:DNF, argv: var seq[string]) : Action =
   select INSTALL, "install"
   select REMOVE, "remove"
   select SEARCH, "search"
-  select LIST, "list", "installed"
+  select LISTALL, "list", "installed"
   select UPGRADEALL, UPGRADE, "upgrade"
   select CLEANUP, "autoremove"
-  select FILES, @["-q", "--query"], @["-l", "--list"]
-  select FILES, @["-l", "--list"], @["-q", "--query"]
+  select LISTPACK, @["-q", "--query"], @["-l", "--list"]
+  select LISTPACK, @["-l", "--list"], @["-q", "--query"]
   return PASSTHROUGH
 
 method action(f:Emerge, argv: var seq[string]) : Action =
@@ -173,8 +173,8 @@ method action(f:Emerge, argv: var seq[string]) : Action =
   select REMOVE, s= @["-C", "--unmerge"]
   select UPGRADEALL, "-u", "world"
   select UPGRADE, "-u"
-  select LIST, "-e"
-  select FILES, "files"
+  select LISTALL, "-e"
+  select LISTPACK, "files"
   return PASSTHROUGH
 
 method action(f:Pacman, argv: var seq[string]) : Action =
@@ -183,9 +183,9 @@ method action(f:Pacman, argv: var seq[string]) : Action =
   select SEARCH, @["-S", "--sync"], @["-s", "--search"]
   select INFO, @["-Q", "--query"], @["-i", "--info"]
   select INFO, @["-S", "--sync"], @["-i", "--info"]
-  select FILES, @["-Q", "--query"], @["-l", "--list"]
+  select LISTPACK, @["-Q", "--query"], @["-l", "--list"]
   select UPGRADE, s= @["-S", "--sync"]
-  select LIST, s= @["-Q", "--query"]
+  select LISTALL, s= @["-Q", "--query"]
   select REMOVE, s= @["-R", "--remove"]
   select ORPHAN, s= @["-Q", "--query"], @["-t", "--unrequired"], @["-d", "--deps"]
   return PASSTHROUGH

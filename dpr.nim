@@ -13,8 +13,8 @@ let target = args.target
 case face.action(args):
   of INFO:target.info(args)
   of INSTALL:target.install(args)
-  of FILES:target.files(args)
-  of LIST:target.list(args)
+  of LISTPACK:target.files(args)
+  of LISTALL:target.list(args)
   of ORPHAN:target.orphan(args)
   of CLEANUP:target.cleanup(args)
   of REMOVE:target.remove(args)
