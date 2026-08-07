@@ -16,6 +16,7 @@ case face.action(args):
   of FILES:target.files(args)
   of LIST:target.list(args)
   of ORPHAN:target.orphan(args)
+  of CLEANUP:target.cleanup(args)
   of REMOVE:target.remove(args)
   of SEARCH:target.search(args)
   of WHERE:target.where(args)

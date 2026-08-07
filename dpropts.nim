@@ -11,7 +11,8 @@ proc hasArg*(args:var seq[string], a:string, position:int = -1) : bool =
       return true
   false
 
-const dprCmd = """  info
+const dprCmd = """  cleanup
+  info
   install
   list
   orphan

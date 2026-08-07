@@ -122,6 +122,7 @@ method action(f:Dpr, argv: var seq[string]) : Action =
   select WHERE, s= @["where", "file", "files"]
   select UPGRADEALL, UPGRADE, "upgrade"
   select ORPHAN, "orphan"
+  select CLEANUP, "cleanup"
   return PASSTHROUGH
 
 method action(f:Apt, argv: var seq[string]) : Action =
@@ -132,6 +133,7 @@ method action(f:Apt, argv: var seq[string]) : Action =
   select REMOVE, "remove"
   select SEARCH, "search"
   select UPGRADEALL, UPGRADE, "upgrade"
+  select CLEANUP, "autoremove"
   return PASSTHROUGH
 
 method action(f:Brew, argv: var seq[string]) : Action =
@@ -141,6 +143,7 @@ method action(f:Brew, argv: var seq[string]) : Action =
   select SEARCH, "search"
   select LIST, FILES, "list"
   select UPGRADEALL, UPGRADE, "upgrade"
+  select CLEANUP, "autoremove"
   return PASSTHROUGH
 
 method action(f:Choco, argv: var seq[string]) : Action =
@@ -160,6 +163,7 @@ method action(f:DNF, argv: var seq[string]) : Action =
   select SEARCH, "search"
   select LIST, "list", "installed"
   select UPGRADEALL, UPGRADE, "upgrade"
+  select CLEANUP, "autoremove"
   select FILES, @["-q", "--query"], @["-l", "--list"]
   select FILES, @["-l", "--list"], @["-q", "--query"]
   return PASSTHROUGH
